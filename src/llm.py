@@ -7,6 +7,8 @@ Creates clients for three LLM backends:
 - ollama-cloud: Ollama Cloud API (requires OLLAMA_API_KEY)
 """
 
+import os
+
 from openai import OpenAI
 
 OLLAMA_LOCAL_URL = 'http://localhost:11434'
@@ -40,7 +42,10 @@ def create_client(llm_mode: str, api_key: str = None):
     else:  # openai
         if not api_key:
             raise ValueError("API key required for openai mode")
-        return OpenAI(api_key=api_key)
+        return OpenAI(
+            api_key=api_key,
+            base_url=os.getenv('OPENAI_BASE_URL') or None,
+        )
 
 
 def is_ollama_mode(llm_mode: str) -> bool:

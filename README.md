@@ -42,6 +42,7 @@ Create a `.env` file with:
 ```bash
 # Required (at least one LLM provider)
 OPENAI_API_KEY=sk-...        # OpenAI API
+OPENAI_BASE_URL=...          # Optional OpenAI-compatible API base URL
 OLLAMA_API_KEY=...           # Ollama Cloud (if using --llm-mode ollama-cloud)
 
 # Required for PubMed
