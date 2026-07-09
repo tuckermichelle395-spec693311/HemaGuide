@@ -31,6 +31,31 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 DEFAULT_BATCH_SIZE = 500
 
 
+class _OllamaEmbeddingFunction:
+    """Chroma embedding adapter for Ollama's current /api/embed endpoint."""
+
+    def __init__(self, model_name: str, url: str = "http://localhost:11434"):
+        from ollama import Client
+
+        self.model_name = model_name
+        self.client = Client(host=url)
+
+    def __call__(self, input: List[str]) -> List[List[float]]:
+        response = self.client.embed(model=self.model_name, input=input)
+        embeddings = response.get('embeddings') if isinstance(response, dict) else response.embeddings
+        return [list(embedding) for embedding in embeddings]
+
+
+def _create_embedding_function(embedding_model: str, api_key: str = None):
+    """Create the configured Chroma embedding function."""
+    if api_key == 'ollama':
+        return _OllamaEmbeddingFunction(model_name=embedding_model)
+    return embedding_functions.OpenAIEmbeddingFunction(
+        api_key=api_key or OPENAI_API_KEY,
+        model_name=embedding_model
+    )
+
+
 # ============================================================================
 # MODULE EXPORTS
 # ============================================================================
@@ -148,16 +173,7 @@ def retrieve_similar_cases(
         sections = ['history']
 
     # Initialize embedding function
-    if api_key == "ollama":
-        embedding_function = embedding_functions.OllamaEmbeddingFunction(
-            model_name=embedding_model,
-            url="http://localhost:11434"
-        )
-    else:
-        embedding_function = embedding_functions.OpenAIEmbeddingFunction(
-            api_key=api_key or OPENAI_API_KEY,
-            model_name=embedding_model
-        )
+    embedding_function = _create_embedding_function(embedding_model, api_key)
 
     try:
         client = chromadb.PersistentClient(path=str(db_path), settings=Settings(anonymized_telemetry=False))
@@ -381,16 +397,7 @@ def _get_or_create_collection(
         settings=Settings(anonymized_telemetry=False)
     )
 
-    if api_key == 'ollama':
-        embedding_function = embedding_functions.OllamaEmbeddingFunction(
-            url="http://localhost:11434",
-            model_name=embedding_model
-        )
-    else:
-        embedding_function = embedding_functions.OpenAIEmbeddingFunction(
-            api_key=api_key or OPENAI_API_KEY,
-            model_name=embedding_model
-        )
+    embedding_function = _create_embedding_function(embedding_model, api_key)
 
     return client.get_or_create_collection(
         name=collection_name,
