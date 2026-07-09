@@ -13,6 +13,7 @@ Output Schema:
 
 import json
 import logging
+import os
 import time
 from typing import Dict, List
 from pathlib import Path
@@ -45,7 +46,7 @@ DEFAULT_DECISION_MODEL = "gpt-oss:120b"
 DEFAULT_TEMPERATURE = 0.3
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 1
-MAX_DECISION_TOKENS = 2048
+MAX_DECISION_TOKENS = int(os.getenv("MAX_DECISION_TOKENS", "8192"))
 
 
 # ============================================================================
