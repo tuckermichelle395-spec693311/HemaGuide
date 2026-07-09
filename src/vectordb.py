@@ -38,12 +38,27 @@ class _OllamaEmbeddingFunction:
         from ollama import Client
 
         self.model_name = model_name
+        self.url = url
         self.client = Client(host=url)
 
     def __call__(self, input: List[str]) -> List[List[float]]:
         response = self.client.embed(model=self.model_name, input=input)
         embeddings = response.get('embeddings') if isinstance(response, dict) else response.embeddings
         return [list(embedding) for embedding in embeddings]
+
+    @staticmethod
+    def name() -> str:
+        return "ollama-current"
+
+    def get_config(self) -> dict:
+        return {"model_name": self.model_name, "url": self.url}
+
+    @staticmethod
+    def build_from_config(config: dict) -> "_OllamaEmbeddingFunction":
+        return _OllamaEmbeddingFunction(
+            model_name=config["model_name"],
+            url=config.get("url", "http://localhost:11434"),
+        )
 
 
 def _create_embedding_function(embedding_model: str, api_key: str = None):
