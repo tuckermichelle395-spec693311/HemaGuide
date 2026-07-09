@@ -30,3 +30,12 @@ coverage.xml
 
 # Frontend build artifacts
 frontend/node_modules/
+
+# Local/private clinical inputs and generated artifacts
+data/flowchart/
+kb_input/
+query_input/
+extracted_data/
+enriched_data/
+kb_storage/
+results/
