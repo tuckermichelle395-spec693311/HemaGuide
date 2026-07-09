@@ -113,6 +113,16 @@ results/
     └── *.json          ← Generated decisions (output)
 ```
 
+### Bundled synthetic test data
+
+This fork includes synthetic, non-patient test documents:
+
+- `kb_input/tumorboards/SIM_*.docx` contains historical cases for building a test knowledge base.
+- `query_input/SIM_*.docx` contains a sample query case.
+
+Local flowcharts are not included. Add authorized flowchart files to
+`data/flowchart/{entity_slug}.txt` before testing guideline mode.
+
 ## Disclaimer
 
 This software is provided as proof-of-concept for **research purposes only** and is not intended for clinical use.

@@ -33,8 +33,12 @@ frontend/node_modules/
 
 # Local/private clinical inputs and generated artifacts
 data/flowchart/
-kb_input/
-query_input/
+kb_input/*
+!kb_input/tumorboards/
+kb_input/tumorboards/*
+!kb_input/tumorboards/SIM_*.docx
+query_input/*
+!query_input/SIM_*.docx
 extracted_data/
 enriched_data/
 kb_storage/
