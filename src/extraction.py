@@ -132,8 +132,12 @@ def extract_document(
     entity_slugs = load_entity_slugs()
     entity_slug = get_entity_slug(entity, entity_slugs)
 
-    # Step 6: Load shared base config (same for all entities)
-    base_config_path = get_base_config_path()
+    # Step 6: Load extraction config. MICM reports use a specialized prompt
+    # but still map back to HemaGuide's standard base section schema.
+    is_micm = is_micm_report(text)
+    base_config_path = get_micm_config_path() if is_micm else get_base_config_path()
+    if is_micm:
+        logger.info(f"Extraction {file_path.name}: MICM report detected, using MICM extraction config")
     with open(base_config_path, 'r', encoding='utf-8') as f:
         base_config = yaml.safe_load(f)
 
@@ -605,6 +609,25 @@ def split_document_at_molecular(
     return text, "", False
 
 
+def is_micm_report(text: str) -> bool:
+    """Detect MICM-style hematology diagnostic reports."""
+    normalized = re.sub(r"\s+", "", text)
+    markers = [
+        "MICM综合诊断报告",
+        "形态学",
+        "免疫学",
+        "细胞遗传学",
+        "分子生物学",
+        "流式",
+        "免疫表型",
+        "核型",
+        "融合基因",
+        "RUNX1-RUNX1T1",
+    ]
+    hits = sum(1 for marker in markers if marker in normalized)
+    return hits >= 3
+
+
 # ============================================================================
 # CONFIGURATION & ROUTING
 # ============================================================================
@@ -639,6 +662,14 @@ def get_base_config_path() -> Path:
     config_path = Path(__file__).parent.parent / "prompts" / "extraction_base.yaml"
     if not config_path.exists():
         raise FileNotFoundError(f"Missing base extraction config: {config_path}")
+    return config_path
+
+
+def get_micm_config_path() -> Path:
+    """Get path to MICM extraction config (extraction_micm.yaml)."""
+    config_path = Path(__file__).parent.parent / "prompts" / "extraction_micm.yaml"
+    if not config_path.exists():
+        raise FileNotFoundError(f"Missing MICM extraction config: {config_path}")
     return config_path
 
 
