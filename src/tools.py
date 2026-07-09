@@ -213,9 +213,43 @@ TOOLS = [
 # FLOWCHART LOADING
 # ============================================================================
 
-def load_flowchart(entity_slug: str = None) -> str:
+def _select_flowchart_branches(flowchart_text: str, branch_path: str) -> str:
+    """Select only the branches named in a routing path.
+
+    Flowcharts remain single source files for easy authoring, while decision
+    generation receives only the preamble and routed branches.
+    """
+    branch_matches = list(
+        re.finditer(r"(?m)^分支\s+(AML-\d+[A-Z]?)[:：]", flowchart_text)
+    )
+    requested = list(dict.fromkeys(
+        re.findall(r"\bAML-\d+[A-Z]?\b", branch_path or "")
+    ))
+    if not branch_matches or not requested:
+        return flowchart_text
+
+    preamble = flowchart_text[:branch_matches[0].start()].rstrip()
+    branches = {}
+    for index, match in enumerate(branch_matches):
+        end = (
+            branch_matches[index + 1].start()
+            if index + 1 < len(branch_matches)
+            else len(flowchart_text)
+        )
+        branches[match.group(1)] = flowchart_text[match.start():end].strip()
+
+    selected = [branches[branch_id] for branch_id in requested if branch_id in branches]
+    if not selected:
+        return flowchart_text
+    return "\n\n".join([preamble, *selected]).strip()
+
+
+def load_flowchart(entity_slug: str = None, branch_path: str = None) -> str:
     """
     Load flowchart from data/flowchart/{entity_slug}.txt.
+
+    When branch_path is provided, return only the shared preamble and the
+    selected branches (for example ``AML-0 → AML-6``).
 
     Returns empty string if not found - caller decides how to handle.
     """
@@ -225,7 +259,10 @@ def load_flowchart(entity_slug: str = None) -> str:
     flowchart_file = DATA_DIR / 'flowchart' / f'{entity_slug}.txt'
 
     if flowchart_file.exists():
-        return flowchart_file.read_text(encoding='utf-8')
+        flowchart_text = flowchart_file.read_text(encoding='utf-8')
+        if branch_path:
+            return _select_flowchart_branches(flowchart_text, branch_path)
+        return flowchart_text
 
     return ""
 
@@ -917,9 +954,9 @@ def _decide_with_guideline(case: Dict, config: Dict, args: Dict) -> Dict:
     prompt_model = config.get('prompt_model')
     prompt_run_id = config.get('prompt_run_id')
 
-    flowchart_text = load_flowchart(entity_slug)
     # Truncate flowchart_path for display (max 60 chars)
     path = args.get('flowchart_path', '')
+    flowchart_text = load_flowchart(entity_slug, branch_path=path)
     path_short = (path[:60] + "...") if len(path) > 60 else path
     path_info = f" → {path_short}" if path_short else ""
     logger.info(f"  {TREE_BRANCH} Flowchart: {entity_slug} ({len(flowchart_text)} chars){path_info}")
