@@ -48,7 +48,8 @@ class _OllamaEmbeddingFunction:
 
     @staticmethod
     def name() -> str:
-        return "ollama-current"
+        # Keep Chroma's persisted identifier for backward compatibility.
+        return "ollama"
 
     def get_config(self) -> dict:
         return {"model_name": self.model_name, "url": self.url}
