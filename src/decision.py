@@ -45,6 +45,7 @@ DEFAULT_DECISION_MODEL = "gpt-oss:120b"
 DEFAULT_TEMPERATURE = 0.3
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 1
+MAX_DECISION_TOKENS = 2048
 
 
 # ============================================================================
@@ -464,6 +465,23 @@ def _call_llm_decision(
     """
     client = create_client(llm_mode, llm_api_key)
 
+    def _valid_json_response(raw_content: str) -> bool:
+        """Return whether the model produced a complete decision JSON object."""
+        if not raw_content or not raw_content.strip():
+            return False
+        cleaned = raw_content.strip()
+        if cleaned.startswith('```'):
+            cleaned = cleaned.strip('`').lstrip('json').strip()
+        try:
+            parsed = json.loads(cleaned)
+        except json.JSONDecodeError:
+            return False
+        return (
+            isinstance(parsed, dict)
+            and isinstance(parsed.get("konferenzbeschluss"), str)
+            and isinstance(parsed.get("begründung"), str)
+        )
+
     if is_ollama_client(llm_mode):
         params = {
             "model": model,
@@ -476,18 +494,23 @@ def _call_llm_decision(
         for attempt in range(MAX_RETRIES):
             response = client.chat(**params)
             content = response['message']['content']
-            if content and content.strip():
+            if _valid_json_response(content):
                 break
             if attempt < MAX_RETRIES - 1:
+                logger.warning(
+                    f"  │    Decision: incomplete JSON response, retrying "
+                    f"({attempt + 1}/{MAX_RETRIES})"
+                )
                 time.sleep(RETRY_DELAY_SECONDS)
         else:
-            raise ValueError(f"Empty response after {MAX_RETRIES} attempts")
+            raise ValueError(f"Invalid JSON response after {MAX_RETRIES} attempts")
 
     else:
         # OpenAI API
         params = {
             "model": model,
             "messages": messages,
+            "max_tokens": MAX_DECISION_TOKENS,
             "response_format": {
                 "type": "json_schema",
                 "json_schema": load_decision_prompts(prompts_file)['json_schema']
@@ -499,12 +522,18 @@ def _call_llm_decision(
         for attempt in range(MAX_RETRIES):
             response = client.chat.completions.create(**params)
             content = response.choices[0].message.content
-            if content and content.strip():
+            if _valid_json_response(content):
                 break
             if attempt < MAX_RETRIES - 1:
+                finish_reason = getattr(response.choices[0], "finish_reason", None)
+                logger.warning(
+                    f"  │    Decision: incomplete JSON response"
+                    f"{f' (finish_reason={finish_reason})' if finish_reason else ''}, "
+                    f"retrying ({attempt + 1}/{MAX_RETRIES})"
+                )
                 time.sleep(RETRY_DELAY_SECONDS)
         else:
-            raise ValueError(f"Empty response after {MAX_RETRIES} attempts")
+            raise ValueError(f"Invalid JSON response after {MAX_RETRIES} attempts")
 
     # Clean markdown code block wrapper if present
     if content.startswith('```'):
