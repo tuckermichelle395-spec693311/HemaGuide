@@ -24,7 +24,8 @@ system_prompt_plain: |
   - Begründen Sie kurz Ihre Entscheidung
 
   WICHTIG: Geben Sie Ihre Antwort als valides JSON-Objekt zurück mit den Feldern "konferenzbeschluss" und "begründung".
-  SPRACHE: Antworten Sie ausschließlich auf Deutsch.
+  SPRACHE: Antworten Sie ausschließlich in vereinfachtem Chinesisch (简体中文).
+  Behalten Sie die vorgegebenen JSON-Schlüssel unverändert.
 
 # Uses {question} (short) instead of {question_long}
 query_case_template: |

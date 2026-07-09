@@ -31,7 +31,8 @@ system_prompt_context: |
   Sie haben Zugriff auf ALLE Informationen der ähnlichen Fälle. Nutzen Sie diese umfassend aber kritisch.
 
   WICHTIG: Geben Sie Ihre Antwort als valides JSON-Objekt zurück mit den Feldern "konferenzbeschluss" und "begründung".
-  SPRACHE: Antworten Sie ausschließlich auf Deutsch.
+  SPRACHE: Antworten Sie ausschließlich in vereinfachtem Chinesisch (简体中文).
+  Behalten Sie die vorgegebenen JSON-Schlüssel unverändert.
 
 # System prompt for plain mode (no context)
 system_prompt_plain: |
@@ -56,7 +57,8 @@ system_prompt_plain: |
   - Begründen Sie kurz Ihre Entscheidung
 
   WICHTIG: Geben Sie Ihre Antwort als valides JSON-Objekt zurück mit den Feldern "konferenzbeschluss" und "begründung".
-  SPRACHE: Antworten Sie ausschließlich auf Deutsch.
+  SPRACHE: Antworten Sie ausschließlich in vereinfachtem Chinesisch (简体中文).
+  Behalten Sie die vorgegebenen JSON-Schlüssel unverändert.
 
 # Query case presentation template
 query_case_template: |
@@ -221,7 +223,8 @@ system_prompt_molecular: |
      - Bei Benign/Likely Benign: "Keine therapierelevanten Varianten identifiziert"
 
   WICHTIG: Geben Sie Ihre Antwort als valides JSON-Objekt zurück mit den Feldern "konferenzbeschluss" und "begründung".
-  SPRACHE: Antworten Sie ausschließlich auf Deutsch.
+  SPRACHE: Antworten Sie ausschließlich in vereinfachtem Chinesisch (简体中文).
+  Behalten Sie die vorgegebenen JSON-Schlüssel unverändert.
 
 # Case template for MOLECULAR mode
 molecular_case_template: |
