@@ -103,13 +103,13 @@ export function InterimResults({ caseResults, isProcessing }: InterimResultsProp
                   </p>
                 </div>
 
-                {/* Reasoning - Collapsible */}
+                {/* Original model reasoning - Collapsible */}
                 <details className="group">
                   <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-700 transition-colors flex items-center gap-2">
                     <svg className="w-3.5 h-3.5 group-open:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                    Show Reasoning
+                    原官方 Reason
                   </summary>
                   <div className="mt-3 pt-3 border-t border-slate-200">
                     <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
@@ -117,6 +117,23 @@ export function InterimResults({ caseResults, isProcessing }: InterimResultsProp
                     </p>
                   </div>
                 </details>
+
+                {/* Auditable supplemental reasoning */}
+                {caseResult.supplemental_reason && (
+                  <details className="group mt-3">
+                    <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-700 transition-colors flex items-center gap-2">
+                      <svg className="w-3.5 h-3.5 group-open:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                      补充 Reason（命中依据）
+                    </summary>
+                    <div className="mt-3 pt-3 border-t border-slate-200">
+                      <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+                        {caseResult.supplemental_reason}
+                      </p>
+                    </div>
+                  </details>
+                )}
               </GlassCard>
             </motion.div>
           );

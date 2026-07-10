@@ -947,6 +947,63 @@ def execute_tool(tool_name: str, args: Dict, case: Dict, config: Dict) -> Dict:
         return {"error": f"Unknown tool: {tool_name}"}
 
 
+def _build_supplemental_reason(decision: Dict) -> str:
+    """Build an auditable addendum without changing the model's original reason.
+
+    Only information already recorded by the pipeline is used here. This keeps the
+    addendum separate from ``begründung`` and avoids inventing guideline or case
+    hits that were not actually retrieved/selected.
+    """
+    mode = decision.get('mode', '')
+    parts = []
+
+    if mode == 'GUIDELINE':
+        path = (decision.get('flowchart_path') or '').strip()
+        if path:
+            parts.append(f"流程图/指南命中：{path}。")
+        elif decision.get('flowchart_used', 0):
+            parts.append("流程图/指南命中：已使用当前疾病对应的治疗流程图，但路由未返回具体分支路径。")
+
+        routing = (decision.get('routing_reasoning') or '').strip()
+        if routing:
+            parts.append(f"命中依据：{routing}")
+
+    elif mode == 'ADVANCED':
+        cases_used = int(decision.get('tailored_cases_used') or decision.get('similar_cases_used') or 0)
+        case_synthesis = (decision.get('case_synthesis') or '').strip()
+        if cases_used and case_synthesis:
+            parts.append(f"相似病例命中（{cases_used}例）：{case_synthesis}")
+        elif cases_used:
+            parts.append(f"相似病例命中：共有{cases_used}例通过相关性筛选，但未生成病例综合。")
+
+        pubmed_used = int(decision.get('tailored_pubmed_used') or 0)
+        pubmed_synthesis = (decision.get('pubmed_synthesis') or '').strip()
+        if pubmed_used and pubmed_synthesis:
+            parts.append(f"PubMed证据命中（{pubmed_used}篇）：{pubmed_synthesis}")
+
+        crossref_used = int(decision.get('tailored_crossref_used') or 0)
+        crossref_synthesis = (decision.get('crossref_synthesis') or '').strip()
+        if crossref_used and crossref_synthesis:
+            parts.append(f"会议证据命中（{crossref_used}篇）：{crossref_synthesis}")
+
+        if not parts:
+            reason = decision.get('synthesis_failure_reason') or 'no_relevant_sources'
+            parts.append(f"补充证据：未记录到可用于本次决策的流程图、相似病例或文献命中（{reason}）。")
+
+    elif mode == 'MOLECULAR':
+        variants = int(decision.get('variants_classified') or 0)
+        cases_used = int(decision.get('similar_cases_used') or 0)
+        if variants:
+            parts.append(f"分子证据：已完成{variants}个变异的结构化分类。")
+        if cases_used:
+            parts.append(f"相似病例命中：{cases_used}例。")
+
+    if not parts:
+        parts.append("补充证据：本次结果未记录到可展示的流程图、指南或相似病例命中。")
+
+    return "\n".join(parts)
+
+
 def _decide_with_guideline(case: Dict, config: Dict, args: Dict) -> Dict:
     """GUIDELINE mode: Use flowchart as context."""
     entity_slug = case.get('entity_slug', 'fallback')
@@ -982,6 +1039,7 @@ def _decide_with_guideline(case: Dict, config: Dict, args: Dict) -> Dict:
     decision['mode'] = 'GUIDELINE'
     decision['routing_reasoning'] = args.get('reasoning', '')
     decision['flowchart_path'] = args.get('flowchart_path', '')
+    decision['supplemental_reason'] = _build_supplemental_reason(decision)
 
     # Layer 4: Mark if this was a fallback decision
     if args.get('fallback'):
@@ -1222,6 +1280,7 @@ def _decide_advanced(case: Dict, config: Dict, args: Dict) -> Dict:
     decision['similar_cases_used'] = len(tailored_cases)
     decision['tailored_pubmed_used'] = len(tailored_pubmed)
     decision['tailored_crossref_used'] = len(tailored_crossref)
+    decision['supplemental_reason'] = _build_supplemental_reason(decision)
     return decision
 
 
@@ -1722,7 +1781,7 @@ def _decide_molecular(case: Dict, config: Dict, args: Dict) -> Dict:
         counts_str += f", errors: {len(translation_errors)}"
     logger.info(f"  {TREE_CONT}   Results: {counts_str}")
 
-    return {
+    decision = {
         'mode': 'MOLECULAR',
         'routing_reasoning': args.get('reasoning', ''),
         'konferenzbeschluss': decision_data.get('konferenzbeschluss', ''),
@@ -1741,3 +1800,5 @@ def _decide_molecular(case: Dict, config: Dict, args: Dict) -> Dict:
         'classification_results': results,
         'report_text': report,
     }
+    decision['supplemental_reason'] = _build_supplemental_reason(decision)
+    return decision

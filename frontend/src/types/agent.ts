@@ -23,6 +23,7 @@ export interface AgentResult {
   routing_reasoning: string;
   konferenzbeschluss: string;
   begründung: string;
+  supplemental_reason?: string;
 
   // GUIDELINE mode
   flowchart_path?: string;
@@ -80,6 +81,7 @@ export interface CaseResult {
   mode: 'GUIDELINE' | 'ADVANCED' | 'MOLECULAR';
   konferenzbeschluss: string;
   begründung: string;
+  supplemental_reason?: string;
   completed_at: string;
 }
 
@@ -95,4 +97,3 @@ export interface StatusUpdate {
   case_results?: CaseResult[];
   result?: AgentResult;
 }
-

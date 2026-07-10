@@ -1,0 +1,87 @@
+diff --git a/backend/main.py b/backend/main.py
+--- a/backend/main.py
++++ b/backend/main.py
+@@
+                 "begründung": result_data.get("begründung", ""),
++                "supplemental_reason": result_data.get("supplemental_reason", ""),
+                 "completed_at": datetime.now().isoformat(),
+diff --git a/frontend/src/types/agent.ts b/frontend/src/types/agent.ts
+--- a/frontend/src/types/agent.ts
++++ b/frontend/src/types/agent.ts
+@@
+   begründung: string;
++  supplemental_reason?: string;
+@@
+   begründung: string;
++  supplemental_reason?: string;
+   completed_at: string;
+diff --git a/frontend/src/components/status/InterimResults.tsx b/frontend/src/components/status/InterimResults.tsx
+--- a/frontend/src/components/status/InterimResults.tsx
++++ b/frontend/src/components/status/InterimResults.tsx
+@@
+-                    Show Reasoning
++                    原官方 Reason
+@@
+                 </details>
++                {caseResult.supplemental_reason && (
++                  <details className="group mt-3">
++                    <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-700 transition-colors flex items-center gap-2">
++                      <svg className="w-3.5 h-3.5 group-open:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
++                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
++                      </svg>
++                      补充 Reason（命中依据）
++                    </summary>
++                    <div className="mt-3 pt-3 border-t border-slate-200">
++                      <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
++                        {caseResult.supplemental_reason}
++                      </p>
++                    </div>
++                  </details>
++                )}
+diff --git a/src/tools.py b/src/tools.py
+--- a/src/tools.py
++++ b/src/tools.py
+@@
++def _build_supplemental_reason(decision: Dict) -> str:
++    """Build an auditable addendum without changing the model's original reason."""
++    mode = decision.get('mode', '')
++    parts = []
++    if mode == 'GUIDELINE':
++        path = (decision.get('flowchart_path') or '').strip()
++        if path:
++            parts.append(f"流程图/指南命中：{path}。")
++        elif decision.get('flowchart_used', 0):
++            parts.append("流程图/指南命中：已使用当前疾病对应的治疗流程图，但路由未返回具体分支路径。")
++        routing = (decision.get('routing_reasoning') or '').strip()
++        if routing:
++            parts.append(f"命中依据：{routing}")
++    elif mode == 'ADVANCED':
++        cases_used = int(decision.get('tailored_cases_used') or decision.get('similar_cases_used') or 0)
++        case_synthesis = (decision.get('case_synthesis') or '').strip()
++        if cases_used and case_synthesis:
++            parts.append(f"相似病例命中（{cases_used}例）：{case_synthesis}")
++        elif cases_used:
++            parts.append(f"相似病例命中：共有{cases_used}例通过相关性筛选，但未生成病例综合。")
++        pubmed_used = int(decision.get('tailored_pubmed_used') or 0)
++        pubmed_synthesis = (decision.get('pubmed_synthesis') or '').strip()
++        if pubmed_used and pubmed_synthesis:
++            parts.append(f"PubMed证据命中（{pubmed_used}篇）：{pubmed_synthesis}")
++        crossref_used = int(decision.get('tailored_crossref_used') or 0)
++        crossref_synthesis = (decision.get('crossref_synthesis') or '').strip()
++        if crossref_used and crossref_synthesis:
++            parts.append(f"会议证据命中（{crossref_used}篇）：{crossref_synthesis}")
++        if not parts:
++            reason = decision.get('synthesis_failure_reason') or 'no_relevant_sources'
++            parts.append(f"补充证据：未记录到可用于本次决策的流程图、相似病例或文献命中（{reason}）。")
++    elif mode == 'MOLECULAR':
++        variants = int(decision.get('variants_classified') or 0)
++        cases_used = int(decision.get('similar_cases_used') or 0)
++        if variants:
++            parts.append(f"分子证据：已完成{variants}个变异的结构化分类。")
++        if cases_used:
++            parts.append(f"相似病例命中：{cases_used}例。")
++    if not parts:
++        parts.append("补充证据：本次结果未记录到可展示的流程图、指南或相似病例命中。")
++    return "\n".join(parts)
+@@
++    decision['supplemental_reason'] = _build_supplemental_reason(decision)
