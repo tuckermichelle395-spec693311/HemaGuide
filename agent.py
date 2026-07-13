@@ -440,11 +440,15 @@ Examples:
 
         # Save TXT
         out_txt = OUTPUT_DIR / f"{stem}_agent.txt"
+        supplemental_reason = decision.get('supplemental_reason')
+        if not supplemental_reason:
+            supplemental_reason = "未记录到补充命中依据。"
         out_txt.write_text(
             f"MODE: {_evidence_label}\n"
             f"{'─' * 60}\n\n"
             f"DECISION:\n{decision.get('konferenzbeschluss', 'N/A')}\n\n"
-            f"REASON:\n{decision.get('begründung', 'N/A')}\n",
+            f"ORIGINAL REASON:\n{decision.get('begründung', 'N/A')}\n\n"
+            f"SUPPLEMENTAL REASON:\n{supplemental_reason}\n",
             encoding='utf-8'
         )
 
