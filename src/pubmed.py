@@ -237,6 +237,8 @@ class PubMedRetriever:
         """
         result = {
             "pmid": "",
+            "doi": "",
+            "url": "",
             "title": "",
             "authors": "",
             "journal": "",
@@ -250,7 +252,19 @@ class PubMedRetriever:
             article = medline.get("Article", {})
 
             result["pmid"] = str(medline.get("PMID", ""))
+            if result["pmid"]:
+                result["url"] = f"https://pubmed.ncbi.nlm.nih.gov/{result['pmid']}/"
             result["title"] = article.get("ArticleTitle", "")
+
+            # DOI is authoritative metadata from PubMed, never model-generated.
+            try:
+                article_ids = article_data.get("PubmedData", {}).get("ArticleIdList", [])
+                for article_id in article_ids:
+                    if str(getattr(article_id, "attributes", {}).get("IdType", "")).lower() == "doi":
+                        result["doi"] = str(article_id).strip()
+                        break
+            except Exception as e:
+                logger.debug(f"PubMed: DOI parse error for PMID {result['pmid']} - {e}")
 
             # Extract authors (first 3)
             try:

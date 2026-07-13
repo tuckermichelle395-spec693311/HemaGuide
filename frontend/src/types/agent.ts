@@ -18,12 +18,36 @@ export interface VariantClassification {
   classification: 'Oncogenic' | 'Likely Oncogenic' | 'VUS' | 'Likely Benign' | 'Benign';
 }
 
+export interface EvidenceHit {
+  title?: string;
+  source_file?: string;
+  path?: string;
+  pmid?: string;
+  doi?: string;
+  url?: string;
+  doi_url?: string;
+  conference?: string;
+  journal?: string;
+  year?: string;
+  relevance?: string;
+  similarity_score?: number | null;
+  key_finding_zh?: string;
+}
+
+export interface EvidenceHits {
+  guidelines?: EvidenceHit[];
+  similar_cases?: EvidenceHit[];
+  pubmed?: EvidenceHit[];
+  conferences?: EvidenceHit[];
+}
+
 export interface AgentResult {
   mode: 'GUIDELINE' | 'ADVANCED' | 'MOLECULAR';
   routing_reasoning: string;
   konferenzbeschluss: string;
   begründung: string;
   supplemental_reason?: string;
+  evidence_hits?: EvidenceHits;
 
   // GUIDELINE mode
   flowchart_path?: string;
@@ -82,6 +106,7 @@ export interface CaseResult {
   konferenzbeschluss: string;
   begründung: string;
   supplemental_reason?: string;
+  evidence_hits?: EvidenceHits;
   completed_at: string;
 }
 

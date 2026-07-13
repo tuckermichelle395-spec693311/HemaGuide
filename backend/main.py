@@ -177,6 +177,7 @@ async def send_case_result(job_id: str, case_stem: str):
                 "konferenzbeschluss": result_data.get("konferenzbeschluss", ""),
                 "begründung": result_data.get("begründung", ""),
                 "supplemental_reason": result_data.get("supplemental_reason", ""),
+                "evidence_hits": result_data.get("evidence_hits", {}),
                 "completed_at": datetime.now().isoformat(),
             }
 

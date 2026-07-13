@@ -695,7 +695,7 @@ def _filter_tailored_molecular_articles(
                 article['relevance'] = ta.get('relevance', 'mittel')
                 filtered.append(article)
 
-    return filtered if filtered else pubmed_articles
+    return filtered
 
 
 def _filter_tailored_crossref_articles(
@@ -715,7 +715,7 @@ def _filter_tailored_crossref_articles(
                 article['relevance'] = tc.get('relevance', 'mittel')
                 filtered.append(article)
 
-    return filtered if filtered else crossref_articles
+    return filtered
 
 
 # ============================================================================
@@ -947,56 +947,159 @@ def execute_tool(tool_name: str, args: Dict, case: Dict, config: Dict) -> Dict:
         return {"error": f"Unknown tool: {tool_name}"}
 
 
-def _build_supplemental_reason(decision: Dict) -> str:
-    """Build an auditable addendum without changing the model's original reason.
+def _normalize_doi(value: str) -> str:
+    """Return a canonical DOI value suitable for a doi.org URL."""
+    doi = (value or '').strip()
+    doi = re.sub(r'^https?://(?:dx\.)?doi\.org/', '', doi, flags=re.IGNORECASE)
+    doi = re.sub(r'^doi:\s*', '', doi, flags=re.IGNORECASE)
+    return doi.strip()
 
-    Only information already recorded by the pipeline is used here. This keeps the
-    addendum separate from ``begründung`` and avoids inventing guideline or case
-    hits that were not actually retrieved/selected.
-    """
+
+def _source_by_index(items: List[Dict], tailored_item: Dict) -> Dict | None:
+    """Resolve an LLM relevance result to its authoritative source record."""
+    try:
+        idx = int(tailored_item.get('index', 0)) - 1
+    except (TypeError, ValueError):
+        return None
+    return items[idx] if 0 <= idx < len(items) else None
+
+
+def _build_evidence_hits(
+    similar_cases: List[Dict] = None,
+    pubmed_articles: List[Dict] = None,
+    crossref_articles: List[Dict] = None,
+    tailored_cases: List[Dict] = None,
+    tailored_pubmed: List[Dict] = None,
+    tailored_crossref: List[Dict] = None,
+) -> Dict:
+    """Build source-grounded evidence metadata from selected retrieval records."""
+    hits = {'guidelines': [], 'similar_cases': [], 'pubmed': [], 'conferences': []}
+
+    for selected in tailored_cases or []:
+        source = _source_by_index(similar_cases or [], selected)
+        if not source:
+            continue
+        hits['similar_cases'].append({
+            'source_file': source.get('source_file', 'unknown'),
+            'similarity_score': source.get('similarity_score'),
+            'relevance': selected.get('relevance', ''),
+            'key_finding_zh': selected.get('key_insight', ''),
+        })
+
+    seen_pmids = set()
+    for selected in tailored_pubmed or []:
+        source = _source_by_index(pubmed_articles or [], selected)
+        if not source:
+            continue
+        pmid = str(source.get('pmid', '')).strip()
+        if pmid and pmid in seen_pmids:
+            continue
+        if pmid:
+            seen_pmids.add(pmid)
+        doi = _normalize_doi(source.get('doi', ''))
+        hits['pubmed'].append({
+            'title': str(source.get('title', '')),
+            'pmid': pmid,
+            'doi': doi,
+            'url': f'https://pubmed.ncbi.nlm.nih.gov/{pmid}/' if pmid else source.get('url', ''),
+            'doi_url': f'https://doi.org/{doi}' if doi else '',
+            'journal': str(source.get('journal', '')),
+            'year': str(source.get('year', '')),
+            'relevance': selected.get('relevance', ''),
+            'key_finding_zh': selected.get('key_finding') or selected.get('therapeutic_implication', ''),
+        })
+
+    seen_dois = set()
+    for selected in tailored_crossref or []:
+        source = _source_by_index(crossref_articles or [], selected)
+        if not source:
+            continue
+        doi = _normalize_doi(source.get('doi', ''))
+        if doi and doi.lower() in seen_dois:
+            continue
+        if doi:
+            seen_dois.add(doi.lower())
+        hits['conferences'].append({
+            'title': str(source.get('title', '')),
+            'doi': doi,
+            'url': f'https://doi.org/{doi}' if doi else source.get('url', ''),
+            'conference': str(source.get('conference', '')),
+            'journal': str(source.get('journal', '')),
+            'year': str(source.get('year', '')),
+            'relevance': selected.get('relevance', ''),
+            'key_finding_zh': selected.get('key_finding') or selected.get('therapeutic_implication', ''),
+        })
+
+    return hits
+
+
+def _build_supplemental_reason(decision: Dict) -> str:
+    """Build a detailed Chinese, source-grounded addendum."""
     mode = decision.get('mode', '')
     parts = []
+    hits = decision.get('evidence_hits') or {}
 
     if mode == 'GUIDELINE':
         path = (decision.get('flowchart_path') or '').strip()
         if path:
-            parts.append(f"流程图/指南命中：{path}。")
+            parts.append(f"【流程图/指南命中】\n命中路径：{path}。")
         elif decision.get('flowchart_used', 0):
-            parts.append("流程图/指南命中：已使用当前疾病对应的治疗流程图，但路由未返回具体分支路径。")
+            parts.append("【流程图/指南命中】\n已使用当前疾病对应的治疗流程图，但路由未返回具体分支路径。")
 
         routing = (decision.get('routing_reasoning') or '').strip()
         if routing:
-            parts.append(f"命中依据：{routing}")
+            parts.append(f"【命中依据】\n{routing}")
+        parts.append("【证据使用情况】\n本次为指南模式，未启动相似病例、PubMed及会议文献检索。")
 
     elif mode == 'ADVANCED':
-        cases_used = int(decision.get('tailored_cases_used') or decision.get('similar_cases_used') or 0)
         case_synthesis = (decision.get('case_synthesis') or '').strip()
-        if cases_used and case_synthesis:
-            parts.append(f"相似病例命中（{cases_used}例）：{case_synthesis}")
-        elif cases_used:
-            parts.append(f"相似病例命中：共有{cases_used}例通过相关性筛选，但未生成病例综合。")
+        case_hits = hits.get('similar_cases', [])
+        if case_hits:
+            refs = '、'.join(h.get('source_file', 'unknown') for h in case_hits)
+            parts.append(f"【相似病例命中】\n命中{len(case_hits)}例：{refs}。" + (f"\n病例综合：{case_synthesis}" if case_synthesis else ''))
+        else:
+            parts.append("【相似病例命中】\n未检索到通过相关性筛选的历史病例。")
 
-        pubmed_used = int(decision.get('tailored_pubmed_used') or 0)
         pubmed_synthesis = (decision.get('pubmed_synthesis') or '').strip()
-        if pubmed_used and pubmed_synthesis:
-            parts.append(f"PubMed证据命中（{pubmed_used}篇）：{pubmed_synthesis}")
+        pubmed_hits = hits.get('pubmed', [])
+        if pubmed_hits:
+            lines = [f"命中{len(pubmed_hits)}篇。" + (f" 综合结论：{pubmed_synthesis}" if pubmed_synthesis else '')]
+            for i, hit in enumerate(pubmed_hits, 1):
+                ids = [f"PMID {hit['pmid']}" for _ in [0] if hit.get('pmid')]
+                ids += [f"DOI {hit['doi']}" for _ in [0] if hit.get('doi')]
+                links = [hit.get('url', ''), hit.get('doi_url', '')]
+                detail = hit.get('key_finding_zh', '')
+                lines.append(f"{i}. {hit.get('title') or '未提供标题'}" + (f"；{'；'.join(ids)}" if ids else ''))
+                if detail:
+                    lines.append(f"   关键发现：{detail}")
+                lines.extend(f"   链接：{link}" for link in links if link)
+            parts.append("【PubMed文献命中】\n" + "\n".join(lines))
+        else:
+            parts.append("【PubMed文献命中】\n未检索到通过相关性筛选的PubMed文献。")
 
-        crossref_used = int(decision.get('tailored_crossref_used') or 0)
         crossref_synthesis = (decision.get('crossref_synthesis') or '').strip()
-        if crossref_used and crossref_synthesis:
-            parts.append(f"会议证据命中（{crossref_used}篇）：{crossref_synthesis}")
-
-        if not parts:
-            reason = decision.get('synthesis_failure_reason') or 'no_relevant_sources'
-            parts.append(f"补充证据：未记录到可用于本次决策的流程图、相似病例或文献命中（{reason}）。")
+        conference_hits = hits.get('conferences', [])
+        if conference_hits:
+            lines = [f"命中{len(conference_hits)}篇。" + (f" 综合结论：{crossref_synthesis}" if crossref_synthesis else '')]
+            for i, hit in enumerate(conference_hits, 1):
+                label = ' '.join(x for x in [hit.get('conference', ''), hit.get('year', '')] if x)
+                lines.append(f"{i}. {label or '会议记录'}：{hit.get('title') or '未提供标题'}" + (f"；DOI {hit['doi']}" if hit.get('doi') else ''))
+                if hit.get('key_finding_zh'):
+                    lines.append(f"   关键发现：{hit['key_finding_zh']}")
+                if hit.get('url'):
+                    lines.append(f"   链接：{hit['url']}")
+            parts.append("【会议记录命中】\n" + "\n".join(lines))
+        else:
+            parts.append("【会议记录命中】\n未检索到通过相关性筛选的会议记录。")
 
     elif mode == 'MOLECULAR':
         variants = int(decision.get('variants_classified') or 0)
-        cases_used = int(decision.get('similar_cases_used') or 0)
         if variants:
-            parts.append(f"分子证据：已完成{variants}个变异的结构化分类。")
-        if cases_used:
-            parts.append(f"相似病例命中：{cases_used}例。")
+            parts.append(f"【分子证据】\n已完成{variants}个变异的结构化分类。")
+        # Reuse the detailed source rendering used by ADVANCED mode.
+        source_decision = dict(decision, mode='ADVANCED')
+        source_text = _build_supplemental_reason(source_decision)
+        parts.append(source_text)
 
     if not parts:
         parts.append("补充证据：本次结果未记录到可展示的流程图、指南或相似病例命中。")
@@ -1039,6 +1142,16 @@ def _decide_with_guideline(case: Dict, config: Dict, args: Dict) -> Dict:
     decision['mode'] = 'GUIDELINE'
     decision['routing_reasoning'] = args.get('reasoning', '')
     decision['flowchart_path'] = args.get('flowchart_path', '')
+    decision['evidence_hits'] = {
+        'guidelines': [{
+            'source_file': f'data/flowchart/{entity_slug}.txt',
+            'path': args.get('flowchart_path', ''),
+            'key_finding_zh': args.get('reasoning', ''),
+        }],
+        'similar_cases': [],
+        'pubmed': [],
+        'conferences': [],
+    }
     decision['supplemental_reason'] = _build_supplemental_reason(decision)
 
     # Layer 4: Mark if this was a fallback decision
@@ -1201,13 +1314,19 @@ def _decide_advanced(case: Dict, config: Dict, args: Dict) -> Dict:
                 logger.info(f"  {TREE_CONT}   Cases → decision: 0/{len(similar_cases)} (none relevant)")
         if pubmed_articles:
             if tailored_pubmed:
-                pmid_refs = [f"PMID:{t.get('pmid', '?')}" for t in tailored_pubmed]
+                pmid_refs = []
+                for selected in tailored_pubmed:
+                    source = _source_by_index(pubmed_articles, selected) or {}
+                    pmid_refs.append(f"PMID:{source.get('pmid', '?')}")
                 logger.info(f"  {TREE_CONT}   PubMed → decision: {len(tailored_pubmed)} of {len(pubmed_articles)} articles relevant ({', '.join(pmid_refs)})")
             else:
                 logger.info(f"  {TREE_CONT}   PubMed → decision: 0 of {len(pubmed_articles)} articles relevant")
         if crossref_articles:
             if tailored_crossref:
-                doi_refs = [f"DOI:{t.get('doi', '?')[:25]}" for t in tailored_crossref]
+                doi_refs = []
+                for selected in tailored_crossref:
+                    source = _source_by_index(crossref_articles, selected) or {}
+                    doi_refs.append(f"DOI:{str(source.get('doi', '?'))[:25]}")
                 logger.info(f"  {TREE_CONT}   CrossRef → decision: {len(tailored_crossref)} of {len(crossref_articles)} articles relevant ({', '.join(doi_refs)})")
             else:
                 logger.info(f"  {TREE_CONT}   CrossRef → decision: 0 of {len(crossref_articles)} articles relevant")
@@ -1280,6 +1399,14 @@ def _decide_advanced(case: Dict, config: Dict, args: Dict) -> Dict:
     decision['similar_cases_used'] = len(tailored_cases)
     decision['tailored_pubmed_used'] = len(tailored_pubmed)
     decision['tailored_crossref_used'] = len(tailored_crossref)
+    decision['evidence_hits'] = _build_evidence_hits(
+        similar_cases=similar_cases,
+        pubmed_articles=pubmed_articles,
+        crossref_articles=crossref_articles,
+        tailored_cases=tailored_cases,
+        tailored_pubmed=tailored_pubmed,
+        tailored_crossref=tailored_crossref,
+    )
     decision['supplemental_reason'] = _build_supplemental_reason(decision)
     return decision
 
@@ -1690,6 +1817,8 @@ def _decide_molecular(case: Dict, config: Dict, args: Dict) -> Dict:
     filtered_articles = pubmed_articles
     filtered_crossref = crossref_articles
     relevant_cases = []
+    selected_pubmed = []
+    selected_crossref = []
 
     if similar_cases or pubmed_articles or crossref_articles:
         logger.info(f"  {TREE_BRANCH} Tailoring context...")
@@ -1709,6 +1838,8 @@ def _decide_molecular(case: Dict, config: Dict, args: Dict) -> Dict:
             # Log which sources passed relevance filter
             tailored_cases = tailored.get('tailored_cases', [])
             relevant_cases = [t for t in tailored_cases if t.get('relevance') in ('hoch', 'mittel')]
+            selected_pubmed = [t for t in tailored.get('tailored_pubmed', []) if t.get('relevance') in ('hoch', 'mittel')]
+            selected_crossref = [t for t in tailored.get('tailored_crossref', []) if t.get('relevance') in ('hoch', 'mittel')]
             if similar_cases:
                 if relevant_cases:
                     logger.info(f"  {TREE_CONT}   Cases → decision: {len(relevant_cases)} of {len(similar_cases)} relevant")
@@ -1800,5 +1931,28 @@ def _decide_molecular(case: Dict, config: Dict, args: Dict) -> Dict:
         'classification_results': results,
         'report_text': report,
     }
+    # If tailoring was unavailable, the raw sources were used in the molecular
+    # decision; represent those selections with authoritative source indexes.
+    if not context_tailored:
+        relevant_cases = [
+            {'index': i, 'relevance': 'mittel', 'key_insight': ''}
+            for i in range(1, len(similar_cases) + 1)
+        ]
+        selected_pubmed = [
+            {'index': i, 'relevance': 'mittel', 'therapeutic_implication': ''}
+            for i in range(1, len(pubmed_articles) + 1)
+        ]
+        selected_crossref = [
+            {'index': i, 'relevance': 'mittel', 'therapeutic_implication': ''}
+            for i in range(1, len(crossref_articles) + 1)
+        ]
+    decision['evidence_hits'] = _build_evidence_hits(
+        similar_cases=similar_cases,
+        pubmed_articles=pubmed_articles,
+        crossref_articles=crossref_articles,
+        tailored_cases=relevant_cases,
+        tailored_pubmed=selected_pubmed,
+        tailored_crossref=selected_crossref,
+    )
     decision['supplemental_reason'] = _build_supplemental_reason(decision)
     return decision

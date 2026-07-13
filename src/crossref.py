@@ -225,6 +225,7 @@ class CrossrefRetriever:
 
             return {
                 "doi": doi,
+                "url": f"https://doi.org/{doi}",
                 "title": title,
                 "authors": authors_str,
                 "journal": journal,

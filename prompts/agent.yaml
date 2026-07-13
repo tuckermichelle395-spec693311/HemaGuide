@@ -41,6 +41,7 @@ routing_system_prompt: |
   1. Analyze the case carefully
   2. Check if it fits the flowchart
   3. Select ONE mode with clear reasoning
+  4. Write the tool-call reasoning and flowchart_path explanation in simplified Chinese.
 
   ## CRITICAL: Tool Selection Required
   You MUST select one of the available tools (decide_with_guideline or decide_advanced).
@@ -90,6 +91,8 @@ context_tailoring_prompt: |
   {crossref_text}
 
   AUFGABE: Bewerten Sie die Quellen und erstellen Sie DREI separate Synthesen.
+  Schreiben Sie alle key_insight/key_finding-Felder und alle Synthesen ausschließlich auf vereinfachtem Chinesisch.
+  Geben Sie für Quellen nur den bereitgestellten index zurück. Erfinden oder kopieren Sie keine PMID, DOI oder URL.
 
   Antworten Sie als JSON:
   {{
@@ -97,10 +100,10 @@ context_tailoring_prompt: |
       {{"index": 1, "relevance": "hoch/mittel/niedrig", "key_insight": "max 150 Zeichen"}}
     ],
     "tailored_pubmed": [
-      {{"index": 1, "pmid": "...", "relevance": "hoch/mittel/niedrig", "key_finding": "max 150 Zeichen"}}
+      {{"index": 1, "relevance": "hoch/mittel/niedrig", "key_finding": "简体中文，最多150字"}}
     ],
     "tailored_crossref": [
-      {{"index": 1, "doi": "...", "conference": "ASH/ASCO/EHA", "relevance": "hoch/mittel/niedrig", "key_finding": "max 150 Zeichen"}}
+      {{"index": 1, "relevance": "hoch/mittel/niedrig", "key_finding": "简体中文，最多150字"}}
     ],
     "case_synthesis": "Was zeigen die ähnlichen Fälle für den nächsten Therapieschritt? Konsens und stärkste Evidenz. (max 300 Zeichen, leer wenn keine Fälle)",
     "pubmed_synthesis": "Was zeigt die aktuelle Literatur für den nächsten Therapieschritt? Konkrete Therapieoptionen mit Evidenz. (max 300 Zeichen, leer wenn keine Artikel)",
@@ -173,6 +176,8 @@ molecular_context_tailoring_prompt: |
   {crossref_text}
 
   AUFGABE: Bewerten Sie die Quellen hinsichtlich ihrer Relevanz für die klassifizierten Varianten und erstellen Sie DREI separate Synthesen.
+  Schreiben Sie alle key_insight/therapeutic_implication-Felder und alle Synthesen ausschließlich auf vereinfachtem Chinesisch.
+  Geben Sie für Quellen nur den bereitgestellten index zurück. Erfinden oder kopieren Sie keine PMID, DOI oder URL.
 
   Antworten Sie als JSON:
   {{
@@ -180,10 +185,10 @@ molecular_context_tailoring_prompt: |
       {{"index": 1, "relevance": "hoch/mittel/niedrig", "key_insight": "max 150 Zeichen"}}
     ],
     "tailored_pubmed": [
-      {{"index": 1, "pmid": "...", "relevance": "hoch/mittel/niedrig", "therapeutic_implication": "max 150 Zeichen"}}
+      {{"index": 1, "relevance": "hoch/mittel/niedrig", "therapeutic_implication": "简体中文，最多150字"}}
     ],
     "tailored_crossref": [
-      {{"index": 1, "doi": "...", "conference": "ASH/ASCO/EHA", "relevance": "hoch/mittel/niedrig", "therapeutic_implication": "max 150 Zeichen"}}
+      {{"index": 1, "relevance": "hoch/mittel/niedrig", "therapeutic_implication": "简体中文，最多150字"}}
     ],
     "case_synthesis": "Was zeigen die ähnlichen Fälle für die molekulare Therapieentscheidung? Konsens bei gleichen Genmutationen. (max 300 Zeichen, leer wenn keine Fälle)",
     "pubmed_synthesis": "Was zeigt die Literatur für zielgerichtete Therapien der Varianten? Konkrete Substanzen und Evidenz. (max 300 Zeichen, leer wenn keine Artikel)",

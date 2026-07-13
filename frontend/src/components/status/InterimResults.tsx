@@ -7,6 +7,46 @@ interface InterimResultsProps {
   isProcessing: boolean;
 }
 
+function EvidenceSources({ result }: { result: CaseResult }) {
+  const evidence = result.evidence_hits;
+  if (!evidence) return null;
+  const sources = [
+    ...(evidence.pubmed || []).map(item => ({ ...item, label: 'PubMed' })),
+    ...(evidence.conferences || []).map(item => ({ ...item, label: item.conference || '会议' })),
+  ];
+  if (sources.length === 0) return null;
+
+  return (
+    <div className="mt-4 pt-3 border-t border-slate-200 space-y-2">
+      <h6 className="text-xs font-medium text-slate-600">可核查的文献来源</h6>
+      {sources.map((source, index) => (
+        <div key={`${source.label}-${source.pmid || source.doi || index}`} className="rounded-lg border border-slate-200 bg-white/60 p-3">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="rounded bg-slate-100 px-2 py-0.5 text-slate-600">{source.label}</span>
+            {source.year && <span className="text-slate-400">{source.year}</span>}
+            {source.pmid && <span className="text-slate-500">PMID: {source.pmid}</span>}
+            {source.doi && <span className="text-slate-500">DOI: {source.doi}</span>}
+          </div>
+          <p className="mt-1 text-sm text-slate-700">{source.title || '未提供标题'}</p>
+          {source.key_finding_zh && <p className="mt-1 text-xs text-slate-500">{source.key_finding_zh}</p>}
+          <div className="mt-2 flex flex-wrap gap-3 text-xs">
+            {source.url && (
+              <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-hemaguide-700 hover:underline">
+                {source.pmid ? '查看 PubMed' : '打开来源'}
+              </a>
+            )}
+            {source.doi_url && source.doi_url !== source.url && (
+              <a href={source.doi_url} target="_blank" rel="noopener noreferrer" className="text-hemaguide-700 hover:underline">
+                打开 DOI
+              </a>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const MODE_CONFIG = {
   GUIDELINE: {
     label: 'GUIDELINE',
@@ -131,6 +171,7 @@ export function InterimResults({ caseResults, isProcessing }: InterimResultsProp
                       <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
                         {caseResult.supplemental_reason}
                       </p>
+                      <EvidenceSources result={caseResult} />
                     </div>
                   </details>
                 )}
