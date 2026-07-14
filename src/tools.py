@@ -1054,7 +1054,9 @@ def _build_supplemental_reason(decision: Dict) -> str:
     elif mode == 'ADVANCED':
         case_synthesis = (decision.get('case_synthesis') or '').strip()
         case_hits = hits.get('similar_cases', [])
-        if case_hits:
+        if decision.get('case_retrieval_disabled'):
+            parts.append("【相似病例命中】\n本次测试已禁用历史病例检索。")
+        elif case_hits:
             refs = '、'.join(h.get('source_file', 'unknown') for h in case_hits)
             parts.append(f"【相似病例命中】\n命中{len(case_hits)}例：{refs}。" + (f"\n病例综合：{case_synthesis}" if case_synthesis else ''))
         else:
@@ -1180,15 +1182,20 @@ def _decide_advanced(case: Dict, config: Dict, args: Dict) -> Dict:
 
     # 1. Retrieve similar cases (filtered by entity type) — over-retrieve for treatment reranking
     n_desired = config.get('n_similar_cases', 3)
-    similar_cases_raw = retrieve_similar_cases(
-        query_document=case,
-        db_path=db_path,
-        collection_name='tumorboards',
-        embedding_model=config['embedding_model'],
-        api_key=config['embedding_api_key'],
-        n_results=n_desired * 3,  # 3x over-retrieval for treatment-aware reranking
-        entity_slug=entity_slug  # Filter by entity type (None = cross-entity)
-    )
+    case_retrieval_disabled = config.get('disable_case_retrieval', False)
+    if case_retrieval_disabled:
+        logger.info(f"  {TREE_CONT}   Similar cases: skipped (--disable-case-retrieval)")
+        similar_cases_raw = []
+    else:
+        similar_cases_raw = retrieve_similar_cases(
+            query_document=case,
+            db_path=db_path,
+            collection_name='tumorboards',
+            embedding_model=config['embedding_model'],
+            api_key=config['embedding_api_key'],
+            n_results=n_desired * 3,  # 3x over-retrieval for treatment-aware reranking
+            entity_slug=entity_slug  # Filter by entity type (None = cross-entity)
+        )
 
     if similar_cases_raw:
         best_score = similar_cases_raw[0].get('similarity_score', 0)
@@ -1390,9 +1397,10 @@ def _decide_advanced(case: Dict, config: Dict, args: Dict) -> Dict:
     decision['mode'] = 'ADVANCED'
     decision['routing_reasoning'] = args.get('reasoning', '')
     decision['similar_cases_count'] = len(similar_cases)
+    decision['case_retrieval_disabled'] = case_retrieval_disabled
     decision['similar_cases_retrieved'] = len(similar_cases_raw)
     decision['similar_cases_after_reranking'] = len(similar_cases)
-    decision['treatment_reranked'] = True
+    decision['treatment_reranked'] = not case_retrieval_disabled
     decision['treatment_reranking_fallback'] = rerank_fallback
     decision['pubmed_articles_count'] = len(pubmed_articles)
     decision['crossref_articles_count'] = len(crossref_articles)

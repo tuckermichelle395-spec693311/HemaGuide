@@ -97,9 +97,13 @@ def run_agent(case: Dict, config: Dict) -> Dict:
     entity_slug = case.get('entity_slug', 'fallback')
 
     # Load entity-specific flowchart
-    flowchart = load_flowchart(entity_slug)
+    ignore_flowchart = config.get('ignore_flowchart', False)
+    flowchart = '' if ignore_flowchart else load_flowchart(entity_slug)
+    if ignore_flowchart:
+        logger.info(f"  {TREE_BRANCH} Flowchart ignored by --ignore-flowchart")
     if not flowchart and entity_slug != 'fallback':
-        logger.warning(f"No flowchart found for entity '{entity_slug}'")
+        if not ignore_flowchart:
+            logger.warning(f"No flowchart found for entity '{entity_slug}'")
 
     # =========================================================================
     # AUTO-ROUTE: Molecular mode if is_mol_tb flag is set
@@ -142,7 +146,12 @@ def run_agent(case: Dict, config: Dict) -> Dict:
     # AUTO-ROUTE: ADVANCED mode for unrecognized diagnoses (no flowchart)
     # =========================================================================
     if entity_slug == 'fallback' or not flowchart:
-        reason = "unrecognized entity" if entity_slug == 'fallback' else f"no flowchart for '{entity_slug}'"
+        if entity_slug == 'fallback':
+            reason = "unrecognized entity"
+        elif ignore_flowchart:
+            reason = "flowchart disabled by test option"
+        else:
+            reason = f"no flowchart for '{entity_slug}'"
         logger.info(f"  {TREE_BRANCH} Mode: ADVANCED (auto-routed, {reason})")
         tool_name = "decide_advanced"
         tool_args = {
@@ -344,6 +353,12 @@ Examples:
 
     # Adjust number of similar cases for ADVANCED mode
     python agent.py --n-similar-cases 5
+
+    # Test ADVANCED mode without moving or deleting the flowchart
+    python agent.py --ignore-flowchart
+
+    # Test without flowchart or historical-case retrieval
+    python agent.py --ignore-flowchart --disable-case-retrieval
         """
     )
 
@@ -354,6 +369,12 @@ Examples:
                        help='LLM model for decision generation (default: mode-specific)')
     parser.add_argument('--n-similar-cases', type=int, default=3,
                        help='Number of similar cases for ADVANCED mode (default: 3)')
+    parser.add_argument('--ignore-flowchart', action='store_true',
+                       help='Ignore available flowcharts for this run and route non-molecular cases to ADVANCED mode')
+    parser.add_argument('--disable-case-retrieval', action='store_true',
+                       help='Skip historical-case retrieval while keeping literature and conference retrieval enabled')
+    parser.add_argument('--output-dir', default=str(OUTPUT_DIR),
+                       help=f'Decision output directory (default: {OUTPUT_DIR})')
     args = parser.parse_args()
 
     # Resolve model based on mode (matching plain_llm.py behavior)
@@ -381,7 +402,8 @@ Examples:
         logger.error("Run 'python process_query_input.py' first")
         sys.exit(1)
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     config = {
         'llm_mode': args.llm_mode,
@@ -389,13 +411,20 @@ Examples:
         'decision_model': decision_model,
         'embedding_model': os.getenv('EMBEDDING_MODEL', 'embeddinggemma:300m'),
         'embedding_api_key': os.getenv('EMBEDDING_API', 'ollama'),
-        'n_similar_cases': args.n_similar_cases
+        'n_similar_cases': args.n_similar_cases,
+        'ignore_flowchart': args.ignore_flowchart,
+        'disable_case_retrieval': args.disable_case_retrieval,
     }
 
     logger.info("═" * 60)
     logger.info("HemaGuide")
     logger.info("─" * 60)
     logger.info(f"Model: {decision_model}  │  Mode: {args.llm_mode}  │  Cases: {len(files)}")
+    if args.ignore_flowchart:
+        logger.info("Test option: flowcharts disabled for this run")
+    if args.disable_case_retrieval:
+        logger.info("Test option: historical-case retrieval disabled for this run")
+    logger.info(f"Output: {output_dir}")
     logger.info("═" * 60)
     logger.info("")
 
@@ -435,11 +464,11 @@ Examples:
             _evidence_label = _mode
 
         # Save JSON
-        out_json = OUTPUT_DIR / f"{stem}_agent.json"
+        out_json = output_dir / f"{stem}_agent.json"
         src.save_json(out_json, decision)
 
         # Save TXT
-        out_txt = OUTPUT_DIR / f"{stem}_agent.txt"
+        out_txt = output_dir / f"{stem}_agent.txt"
         supplemental_reason = decision.get('supplemental_reason')
         if not supplemental_reason:
             supplemental_reason = "未记录到补充命中依据。"

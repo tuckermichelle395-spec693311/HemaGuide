@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+common_args=(
+  --llm-mode openai
+  --decision-model Qwen3.6-27B-UD-Q4_K_XL.gguf
+  "$@"
+)
+
+echo "[1/3] 有流程图（正常路由）"
+python agent.py "${common_args[@]}" \
+  --output-dir results/reason_scenarios/with_flowchart
+
+echo "[2/3] 无流程图，有历史病例"
+python agent.py "${common_args[@]}" \
+  --ignore-flowchart \
+  --output-dir results/reason_scenarios/no_flowchart_with_cases
+
+echo "[3/3] 无流程图，无历史病例"
+python agent.py "${common_args[@]}" \
+  --ignore-flowchart \
+  --disable-case-retrieval \
+  --output-dir results/reason_scenarios/no_flowchart_no_cases
+
+echo "完成：结果位于 results/reason_scenarios/"
