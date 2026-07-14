@@ -1765,9 +1765,14 @@ def _decide_molecular(case: Dict, config: Dict, args: Dict) -> Dict:
     # ========================================================================
     all_genes = [r['gene'] for r in results if r.get('gene')]
 
-    logger.info(f"  {TREE_BRANCH} Retrieving gene-matched cases...")
-    similar_cases = retrieve_gene_matched_cases(all_genes, Path('extracted_data/kb_input/tumorboards'))
-    logger.info(f"  {TREE_CONT}   Gene-matched: {len(similar_cases)} (genes: {', '.join(all_genes[:3])}{'...' if len(all_genes) > 3 else ''})")
+    case_retrieval_disabled = config.get('disable_case_retrieval', False)
+    if case_retrieval_disabled:
+        logger.info(f"  {TREE_BRANCH} Gene-matched cases: skipped (--disable-case-retrieval)")
+        similar_cases = []
+    else:
+        logger.info(f"  {TREE_BRANCH} Retrieving gene-matched cases...")
+        similar_cases = retrieve_gene_matched_cases(all_genes, Path('extracted_data/kb_input/tumorboards'))
+        logger.info(f"  {TREE_CONT}   Gene-matched: {len(similar_cases)} (genes: {', '.join(all_genes[:3])}{'...' if len(all_genes) > 3 else ''})")
 
     # Enrich gene-matched cases at runtime (saves to enriched_data/tumorboards/)
     # Only enrich if LLM config is available (may not be in tests)
@@ -1948,6 +1953,7 @@ def _decide_molecular(case: Dict, config: Dict, args: Dict) -> Dict:
         'variants_classified': len(results),
         'fish_count': len(fish_results),
         'similar_cases_count': len(similar_cases),
+        'case_retrieval_disabled': case_retrieval_disabled,
         'pubmed_articles_count': len(pubmed_articles),
         'crossref_articles_count': len(crossref_articles),
         'conference_retrieval_disabled': conference_retrieval_disabled,

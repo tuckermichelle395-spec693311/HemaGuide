@@ -362,6 +362,9 @@ Examples:
 
     # Skip meeting/conference retrieval while retaining PubMed
     python agent.py --disable-conference-retrieval
+
+    # Process one extracted query by filename stem
+    python agent.py --case-id SIM_MOL_KIT_query
         """
     )
 
@@ -380,6 +383,8 @@ Examples:
                        help='Skip Crossref meeting/conference retrieval while keeping PubMed enabled')
     parser.add_argument('--output-dir', default=str(OUTPUT_DIR),
                        help=f'Decision output directory (default: {OUTPUT_DIR})')
+    parser.add_argument('--case-id',
+                       help='Process only the query whose filename stem matches this value')
     args = parser.parse_args()
 
     # Resolve model based on mode (matching plain_llm.py behavior)
@@ -406,6 +411,11 @@ Examples:
     if not is_valid:
         logger.error("Run 'python process_query_input.py' first")
         sys.exit(1)
+    if args.case_id:
+        files = [f for f in files if f.stem == args.case_id]
+        if not files:
+            logger.error(f"No extracted query found for case ID '{args.case_id}'")
+            sys.exit(1)
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
