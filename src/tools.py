@@ -1085,7 +1085,9 @@ def _build_supplemental_reason(decision: Dict) -> str:
 
         crossref_synthesis = (decision.get('crossref_synthesis') or '').strip()
         conference_hits = hits.get('conferences', [])
-        if conference_hits:
+        if decision.get('conference_retrieval_disabled'):
+            parts.append("【会议记录命中】\n本次测试已禁用会议记录检索。")
+        elif conference_hits:
             lines = [f"命中{len(conference_hits)}篇。" + (f" 综合结论：{crossref_synthesis}" if crossref_synthesis else '')]
             for i, hit in enumerate(conference_hits, 1):
                 label = ' '.join(x for x in [hit.get('conference', ''), hit.get('year', '')] if x)
@@ -1269,6 +1271,7 @@ def _decide_advanced(case: Dict, config: Dict, args: Dict) -> Dict:
     # 3. Search PubMed
     pubmed_articles = []
     crossref_articles = []
+    conference_retrieval_disabled = config.get('disable_conference_retrieval', False)
     if pubmed_query:
         try:
             retriever = PubMedRetriever()
@@ -1277,12 +1280,15 @@ def _decide_advanced(case: Dict, config: Dict, args: Dict) -> Dict:
             logger.warning(f"  {TREE_CONT}   PubMed error: {e}")
 
         # 3b. Search Crossref (conference proceedings: ASH, ASCO, EHA)
-        try:
-            from .crossref import CrossrefRetriever
-            cr = CrossrefRetriever()
-            crossref_articles = cr.retrieve(pubmed_query, max_results=3, years_back=3)
-        except Exception as e:
-            logger.warning(f"  {TREE_CONT}   CrossRef error: {e}")
+        if conference_retrieval_disabled:
+            logger.info(f"  {TREE_CONT}   CrossRef: skipped (--disable-conference-retrieval)")
+        else:
+            try:
+                from .crossref import CrossrefRetriever
+                cr = CrossrefRetriever()
+                crossref_articles = cr.retrieve(pubmed_query, max_results=3, years_back=3)
+            except Exception as e:
+                logger.warning(f"  {TREE_CONT}   CrossRef error: {e}")
 
     # Log retrieval stats (identifiers shown at tailoring stage)
     logger.info(f"  {TREE_CONT}   PubMed: {len(pubmed_articles)} retrieved")
@@ -1404,6 +1410,7 @@ def _decide_advanced(case: Dict, config: Dict, args: Dict) -> Dict:
     decision['treatment_reranking_fallback'] = rerank_fallback
     decision['pubmed_articles_count'] = len(pubmed_articles)
     decision['crossref_articles_count'] = len(crossref_articles)
+    decision['conference_retrieval_disabled'] = conference_retrieval_disabled
     decision['pubmed_query'] = pubmed_query
     decision['effective_mode'] = 'PLAIN' if decision.get('synthesis_failed') else 'ADVANCED'
     decision['synthesis_failure_reason'] = synthesis_failure_reason
@@ -1801,21 +1808,25 @@ def _decide_molecular(case: Dict, config: Dict, args: Dict) -> Dict:
 
     # Crossref for actionable variants only (conference proceedings: ASH, ASCO, EHA)
     # Gated to Oncogenic / Likely Oncogenic, matching the PubMed gating above.
-    try:
-        from .crossref import CrossrefRetriever
-        cr = CrossrefRetriever()
-        search_variants = actionable[:3]
-        for sv in search_variants:
-            query = f"{sv['gene']} therapy treatment"
-            cr_articles = cr.retrieve(query, journals=["Blood", "JCO"], max_results=2, years_back=3)
-            for a in cr_articles:
-                a['source_variant'] = f"{sv['gene']} {sv.get('aa_change', '')}"
-                a['variant_classification'] = sv.get('classification', 'Unknown')
-            crossref_articles.extend(cr_articles)
-        # Limit to max 4 CrossRef articles total
-        crossref_articles = crossref_articles[:4]
-    except Exception as e:
-        logger.warning(f"  {TREE_CONT}   CrossRef error: {e}")
+    conference_retrieval_disabled = config.get('disable_conference_retrieval', False)
+    if conference_retrieval_disabled:
+        logger.info(f"  {TREE_CONT}   CrossRef: skipped (--disable-conference-retrieval)")
+    else:
+        try:
+            from .crossref import CrossrefRetriever
+            cr = CrossrefRetriever()
+            search_variants = actionable[:3]
+            for sv in search_variants:
+                query = f"{sv['gene']} therapy treatment"
+                cr_articles = cr.retrieve(query, journals=["Blood", "JCO"], max_results=2, years_back=3)
+                for a in cr_articles:
+                    a['source_variant'] = f"{sv['gene']} {sv.get('aa_change', '')}"
+                    a['variant_classification'] = sv.get('classification', 'Unknown')
+                crossref_articles.extend(cr_articles)
+            # Limit to max 4 CrossRef articles total
+            crossref_articles = crossref_articles[:4]
+        except Exception as e:
+            logger.warning(f"  {TREE_CONT}   CrossRef error: {e}")
 
     logger.info(f"  {TREE_CONT}   CrossRef: {len(crossref_articles)} retrieved")
 
@@ -1939,6 +1950,7 @@ def _decide_molecular(case: Dict, config: Dict, args: Dict) -> Dict:
         'similar_cases_count': len(similar_cases),
         'pubmed_articles_count': len(pubmed_articles),
         'crossref_articles_count': len(crossref_articles),
+        'conference_retrieval_disabled': conference_retrieval_disabled,
         'translation_errors': translation_errors,
         'classification_results': results,
         'report_text': report,

@@ -359,6 +359,9 @@ Examples:
 
     # Test without flowchart or historical-case retrieval
     python agent.py --ignore-flowchart --disable-case-retrieval
+
+    # Skip meeting/conference retrieval while retaining PubMed
+    python agent.py --disable-conference-retrieval
         """
     )
 
@@ -373,6 +376,8 @@ Examples:
                        help='Ignore available flowcharts for this run and route non-molecular cases to ADVANCED mode')
     parser.add_argument('--disable-case-retrieval', action='store_true',
                        help='Skip historical-case retrieval while keeping literature and conference retrieval enabled')
+    parser.add_argument('--disable-conference-retrieval', '--no-conference', action='store_true',
+                       help='Skip Crossref meeting/conference retrieval while keeping PubMed enabled')
     parser.add_argument('--output-dir', default=str(OUTPUT_DIR),
                        help=f'Decision output directory (default: {OUTPUT_DIR})')
     args = parser.parse_args()
@@ -414,6 +419,7 @@ Examples:
         'n_similar_cases': args.n_similar_cases,
         'ignore_flowchart': args.ignore_flowchart,
         'disable_case_retrieval': args.disable_case_retrieval,
+        'disable_conference_retrieval': args.disable_conference_retrieval,
     }
 
     logger.info("═" * 60)
@@ -424,6 +430,8 @@ Examples:
         logger.info("Test option: flowcharts disabled for this run")
     if args.disable_case_retrieval:
         logger.info("Test option: historical-case retrieval disabled for this run")
+    if args.disable_conference_retrieval:
+        logger.info("Test option: meeting/conference retrieval disabled for this run")
     logger.info(f"Output: {output_dir}")
     logger.info("═" * 60)
     logger.info("")
