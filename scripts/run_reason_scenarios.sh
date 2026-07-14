@@ -9,19 +9,26 @@ common_args=(
   "$@"
 )
 
-echo "[1/3] 有流程图（正常路由）"
+echo "[1/4] 有流程图（正常路由）"
 python agent.py "${common_args[@]}" \
   --output-dir results/reason_scenarios/with_flowchart
 
-echo "[2/3] 无流程图，有历史病例"
+echo "[2/4] 无流程图，有历史病例"
 python agent.py "${common_args[@]}" \
   --ignore-flowchart \
   --output-dir results/reason_scenarios/no_flowchart_with_cases
 
-echo "[3/3] 无流程图，无历史病例"
+echo "[3/4] 无流程图，无历史病例"
 python agent.py "${common_args[@]}" \
   --ignore-flowchart \
   --disable-case-retrieval \
   --output-dir results/reason_scenarios/no_flowchart_no_cases
+
+echo "[4/4] 无流程图，无历史病例，无会议记录（保留 PubMed）"
+python agent.py "${common_args[@]}" \
+  --ignore-flowchart \
+  --disable-case-retrieval \
+  --disable-conference-retrieval \
+  --output-dir results/reason_scenarios/no_flowchart_no_cases_no_conference
 
 echo "完成：结果位于 results/reason_scenarios/"
