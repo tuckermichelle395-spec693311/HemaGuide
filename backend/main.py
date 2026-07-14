@@ -29,7 +29,7 @@ QUERY_INPUT_DIR = PROJECT_ROOT / 'query_input'
 EXTRACTED_DIR = PROJECT_ROOT / 'extracted_data' / 'query_input'
 RESULTS_DIR = PROJECT_ROOT / 'results' / 'agent_decisions'
 KB_DIR = PROJECT_ROOT / 'kb_storage' / 'chroma_db'
-VENV_PYTHON = Path(os.environ.get('HEMAGUIDE_PYTHON', str(PROJECT_ROOT / 'venv' / 'bin' / 'python')))
+VENV_PYTHON = Path(os.environ.get('HEMAGUIDE_PYTHON') or sys.executable)
 FLOWCHART_SOURCES = PROJECT_ROOT / 'data' / 'onkopedia.json'
 ONKOPEDIA_URL = "https://www.onkopedia.com/de/onkopedia/guidelines/{slug}/@@guideline/html/index.html"
 GERMAN_MONTHS = {
@@ -95,8 +95,12 @@ jobs_lock = asyncio.Lock()
 
 class ProcessRequest(BaseModel):
     llm_mode: str = "ollama-local"
-    decision_model: str = "gpt-oss:120b"
+    decision_model: str = "qwen3:8b"
     files: List[str]
+    use_flowchart: bool = True
+    use_historical_cases: bool = True
+    use_pubmed: bool = True
+    use_conferences: bool = True
 
 
 class UploadResponse(BaseModel):
@@ -119,6 +123,63 @@ class StatusResponse(BaseModel):
     case_results: Optional[List[dict]] = None
     result: Optional[dict] = None
     files: Optional[List[str]] = None
+    extraction_previews: Optional[List[dict]] = None
+
+
+def _parse_json_list(value) -> list:
+    if isinstance(value, list):
+        return value
+    if not value or value == "nicht vorhanden":
+        return []
+    try:
+        parsed = json.loads(value)
+        return parsed if isinstance(parsed, list) else []
+    except (TypeError, json.JSONDecodeError):
+        return []
+
+
+def _load_extraction_previews(files: List[str]) -> List[dict]:
+    previews = []
+    for filename in files:
+        path = EXTRACTED_DIR / f"{Path(filename).stem}.json"
+        if not path.exists():
+            continue
+        with open(path, 'r', encoding='utf-8') as handle:
+            data = json.load(handle)
+        sections = data.get("sections", {})
+        variants = _parse_json_list(sections.get("mol_info"))
+        fish = _parse_json_list(sections.get("mol_fish"))
+        previews.append({
+            "filename": filename,
+            "diagnosis": sections.get("main_diagnosis") or sections.get("entity") or "Not identified",
+            "entity": sections.get("entity", "Not identified"),
+            "age": sections.get("age", "Not provided"),
+            "ecog": sections.get("ECOG", "Not provided"),
+            "tumorboard_type": sections.get("tumorboard_type", "Not identified"),
+            "is_molecular": bool(sections.get("is_mol_tb")),
+            "predicted_mode": "MOLECULAR" if sections.get("is_mol_tb") else "Automatic routing",
+            "variants": [
+                {
+                    "gene": item.get("gene", "Unknown"),
+                    "aa_change": item.get("aa_change") or item.get("variant") or "Not provided",
+                    "vaf": item.get("vaf"),
+                }
+                for item in variants if isinstance(item, dict)
+            ],
+            "fish_count": len(fish),
+        })
+    return previews
+
+
+def _friendly_error(error: Exception, phase: str) -> str:
+    text = str(error)
+    if isinstance(error, FileNotFoundError) or "No such file or directory" in text:
+        return f"{phase} could not start because a required executable or file was not found. Check the Python environment and project paths."
+    if "Connection" in text or "connect" in text.lower():
+        return f"{phase} could not connect to the configured model service. Confirm that Ollama is running on localhost:11434."
+    if "exit code" in text:
+        return f"{phase} failed. Open Technical logs below for the model or extraction error."
+    return f"{phase} failed: {text}"
 
 
 class FlowchartStatus(BaseModel):
@@ -174,6 +235,9 @@ async def send_case_result(job_id: str, case_stem: str):
                 "case_id": case_stem,
                 "case_name": case_stem,
                 "mode": result_data.get("mode", "GUIDELINE"),
+                "effective_mode": result_data.get("effective_mode", result_data.get("mode", "GUIDELINE")),
+                "synthesis_failed": result_data.get("synthesis_failed", False),
+                "synthesis_failure_reason": result_data.get("synthesis_failure_reason"),
                 "konferenzbeschluss": result_data.get("konferenzbeschluss", ""),
                 "begründung": result_data.get("begründung", ""),
                 "supplemental_reason": result_data.get("supplemental_reason", ""),
@@ -265,6 +329,7 @@ async def process_documents(job_id: str):
     job = jobs[job_id]
     config = job["config"]
 
+    phase = "Document extraction"
     try:
         # Step 1: Extraction
         await update_job_status(job_id, "extracting", "Dokumentenextraktion...", 10)
@@ -272,6 +337,7 @@ async def process_documents(job_id: str):
         extraction_cmd = [
             str(VENV_PYTHON), "-u", "process_query_input.py",
             "--llm-mode", config["llm_mode"],
+            "--extraction-model", config["decision_model"],
         ]
 
         logger.info(f"Running extraction: {' '.join(extraction_cmd)}")
@@ -288,9 +354,22 @@ async def process_documents(job_id: str):
         if proc.returncode is None or proc.returncode != 0:
             raise Exception(f"Extraction failed with exit code {proc.returncode} - check logs")
 
-        await update_job_status(job_id, "extracting", "Extraktion abgeschlossen", 40)
+        previews = _load_extraction_previews(job["files"])
+        if not previews:
+            raise Exception("Extraction completed but no structured case preview was produced")
+        job["extraction_previews"] = previews
+        await update_job_status(job_id, "routing", "Extraction complete; starting agent automatically", 40)
+        await manager.send_status(job_id, {
+            "status": "routing",
+            "message": "Extraction complete; starting agent automatically",
+            "progress": 40,
+            "current_case": 0,
+            "total_cases": job["total_cases"],
+            "extraction_previews": previews,
+        })
 
         # Step 2: Agent processing
+        phase = "Agent decision generation"
         if not KB_DIR.exists():
             logger.warning("Knowledge base not found - similar case retrieval will be skipped")
 
@@ -301,6 +380,14 @@ async def process_documents(job_id: str):
             "--llm-mode", config["llm_mode"],
             "--decision-model", config["decision_model"],
         ]
+        if not config["use_flowchart"]:
+            agent_cmd.append("--ignore-flowchart")
+        if not config["use_historical_cases"]:
+            agent_cmd.append("--disable-case-retrieval")
+        if not config["use_pubmed"]:
+            agent_cmd.append("--disable-pubmed-retrieval")
+        if not config["use_conferences"]:
+            agent_cmd.append("--disable-conference-retrieval")
 
         logger.info(f"Running agent: {' '.join(agent_cmd)}")
         proc = await asyncio.create_subprocess_exec(
@@ -353,11 +440,13 @@ async def process_documents(job_id: str):
 
     except Exception as e:
         logger.error(f"Job {job_id} failed: {e}")
+        friendly_message = _friendly_error(e, phase)
         job["status"] = "error"
-        job["message"] = str(e)
+        job["message"] = friendly_message
         await manager.send_status(job_id, {
             "status": "error",
-            "message": str(e),
+            "message": friendly_message,
+            "technical_message": str(e),
             "logs": job["logs"][-10:],
         })
 
@@ -458,6 +547,36 @@ async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 
+@app.get("/api/system-status")
+async def system_status():
+    """Return local runtime readiness and installed Ollama models."""
+    ollama_error = None
+    models = []
+    try:
+        response = await asyncio.to_thread(requests.get, "http://localhost:11434/api/tags", timeout=3)
+        response.raise_for_status()
+        models = sorted({item.get("name", "") for item in response.json().get("models", []) if item.get("name")})
+    except Exception as exc:
+        ollama_error = str(exc)
+
+    decision_models = [name for name in models if "embed" not in name.lower()]
+    embedding_models = [name for name in models if "embed" in name.lower()]
+    flowchart_dir = PROJECT_ROOT / "data" / "flowchart"
+    return {
+        "ollama_connected": ollama_error is None,
+        "ollama_error": ollama_error,
+        "models": models,
+        "decision_models": decision_models,
+        "embedding_models": embedding_models,
+        "recommended_decision_model": "qwen3:8b" if "qwen3:8b" in decision_models else (decision_models[0] if decision_models else None),
+        "recommended_embedding_model": "embeddinggemma:300m" if "embeddinggemma:300m" in embedding_models else (embedding_models[0] if embedding_models else None),
+        "knowledge_base_ready": KB_DIR.exists(),
+        "flowchart_count": len(list(flowchart_dir.glob("*.txt"))) if flowchart_dir.exists() else 0,
+        "python_path": str(VENV_PYTHON),
+        "python_ready": VENV_PYTHON.exists(),
+    }
+
+
 @app.post("/api/upload", response_model=UploadResponse)
 async def upload_file(file: UploadFile = File(...)):
     """Upload a .docx file to query_input/"""
@@ -537,11 +656,15 @@ async def start_processing(request: ProcessRequest):
         "config": {
             "llm_mode": request.llm_mode,
             "decision_model": request.decision_model,
+            "use_flowchart": request.use_flowchart,
+            "use_historical_cases": request.use_historical_cases,
+            "use_pubmed": request.use_pubmed,
+            "use_conferences": request.use_conferences,
         },
         "created_at": datetime.now().isoformat(),
         "result": None,
+        "extraction_previews": [],
     }
-
     asyncio.create_task(process_documents(job_id))
 
     logger.info(f"Started job {job_id} for files: {request.files}")

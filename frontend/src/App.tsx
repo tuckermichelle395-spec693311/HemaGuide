@@ -5,18 +5,24 @@ import { GlassCard } from './components/layout/GlassCard';
 import { DropZone } from './components/upload/DropZone';
 import { ConfigPanel } from './components/config/ConfigPanel';
 import { StatusIndicator } from './components/status/StatusIndicator';
+import { ProcessingSteps } from './components/status/ProcessingSteps';
 import { LogViewer } from './components/status/LogViewer';
 import { InterimResults } from './components/status/InterimResults';
 import { ResultsDisplay } from './components/results/ResultsDisplay';
 import { useWebSocket } from './hooks/useWebSocket';
 import * as api from './api/client';
-import type { Config, ProcessingStatus, AgentResult, StatusUpdate, CaseResult } from './types/agent';
+import type { Config, ProcessingStatus, AgentResult, StatusUpdate, CaseResult, ExtractionPreview } from './types/agent';
+import type { SystemStatus } from './api/client';
 
 export default function App() {
   // State
   const [config, setConfig] = useState<Config>({
     llmMode: 'ollama-local',
-    decisionModel: 'gpt-oss:120b',
+    decisionModel: 'qwen3:8b',
+    useFlowchart: true,
+    useHistoricalCases: true,
+    usePubMed: true,
+    useConferences: true,
   });
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [status, setStatus] = useState<ProcessingStatus>('idle');
@@ -29,6 +35,25 @@ export default function App() {
   const [result, setResult] = useState<AgentResult | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [technicalError, setTechnicalError] = useState<string | null>(null);
+  const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
+  const [loadingSystemStatus, setLoadingSystemStatus] = useState(false);
+  const [extractionPreviews, setExtractionPreviews] = useState<ExtractionPreview[]>([]);
+
+  const refreshSystemStatus = useCallback(async () => {
+    setLoadingSystemStatus(true);
+    try {
+      const next = await api.getSystemStatus();
+      setSystemStatus(next);
+      if (next.recommended_decision_model) {
+        setConfig(current => ({ ...current, decisionModel: next.recommended_decision_model! }));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'System readiness check failed');
+    } finally {
+      setLoadingSystemStatus(false);
+    }
+  }, []);
 
   // WebSocket for real-time updates
   useWebSocket(jobId, {
@@ -74,6 +99,13 @@ export default function App() {
           return [...prev, data.case_result!];
         });
       }
+      if (data.extraction_previews) {
+        setExtractionPreviews(data.extraction_previews);
+      }
+      if (data.status === 'error') {
+        setError(data.message || 'Processing failed');
+        setTechnicalError(data.technical_message || null);
+      }
       if (data.result) {
         setResult(data.result);
         setJobId(null);
@@ -89,7 +121,8 @@ export default function App() {
     api.listFiles().then(files => {
       setUploadedFiles(files);
     }).catch(console.error);
-  }, []);
+    refreshSystemStatus();
+  }, [refreshSystemStatus]);
 
   // Handle file upload
   const handleFilesAccepted = useCallback(async (files: File[]) => {
@@ -132,6 +165,8 @@ export default function App() {
     setResult(null);
     setLogs([]);
     setCaseResults([]);
+    setExtractionPreviews([]);
+    setTechnicalError(null);
     setCurrentCase(0);
     setTotalCases(uploadedFiles.length);
     setStatus('extracting');
@@ -148,6 +183,7 @@ export default function App() {
   }, [uploadedFiles, config]);
 
   const isProcessing = !['idle', 'complete', 'error'].includes(status);
+  const systemReady = Boolean(systemStatus?.ollama_connected && systemStatus?.python_ready && systemStatus?.decision_models.length);
 
   return (
     <div className="min-h-screen relative bg-gradient-to-b from-slate-50 to-slate-100">
@@ -172,6 +208,9 @@ export default function App() {
               config={config}
               onConfigChange={setConfig}
               disabled={isProcessing}
+              systemStatus={systemStatus}
+              loadingStatus={loadingSystemStatus}
+              onRefreshStatus={refreshSystemStatus}
             />
 
             <GlassCard className="p-5 flex flex-col" hover={false}>
@@ -189,7 +228,9 @@ export default function App() {
 
               <div className="flex-1 flex flex-col justify-between">
                 <p className="text-sm text-slate-500 mb-4">
-                  {uploadedFiles.length === 0
+                  {!systemReady
+                    ? 'Local model service is not ready. Check the status panel.'
+                    : uploadedFiles.length === 0
                     ? 'Upload documents to continue'
                     : `${uploadedFiles.length} document${uploadedFiles.length !== 1 ? 's' : ''} ready for processing`
                   }
@@ -197,7 +238,7 @@ export default function App() {
 
                 <motion.button
                   onClick={handleProcess}
-                  disabled={isProcessing || uploadedFiles.length === 0}
+                  disabled={isProcessing || uploadedFiles.length === 0 || !systemReady}
                   className="glass-button-primary w-full py-3.5"
                   whileHover={{ scale: isProcessing ? 1 : 1.02 }}
                   whileTap={{ scale: isProcessing ? 1 : 0.98 }}
@@ -225,6 +266,7 @@ export default function App() {
           </section>
 
           {/* Status */}
+          <ProcessingSteps status={status} />
           <AnimatePresence>
             {status !== 'idle' && (
               <motion.section
@@ -242,6 +284,23 @@ export default function App() {
               </motion.section>
             )}
           </AnimatePresence>
+
+          {extractionPreviews.length > 0 && (
+            <details className="glass-panel p-4">
+              <summary className="cursor-pointer text-sm font-medium text-slate-700">
+                View extracted case data ({extractionPreviews.length})
+              </summary>
+              <div className="mt-3 space-y-2 text-sm text-slate-600">
+                {extractionPreviews.map(item => (
+                  <div key={item.filename} className="rounded-lg border border-slate-200 bg-white p-3">
+                    <span className="font-medium text-slate-800">{item.filename}</span>
+                    <span className="ml-2 text-xs text-violet-700">{item.predicted_mode}</span>
+                    <p className="mt-1">{item.diagnosis} · {item.variants.length} variant(s) · {item.fish_count} FISH finding(s)</p>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
 
           {/* Interim Results - Show during processing */}
           <AnimatePresence>
@@ -287,7 +346,15 @@ export default function App() {
                         d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <span className="text-red-700">{error}</span>
+                    <div className="flex-1">
+                      <p className="text-red-700">{error}</p>
+                      {technicalError && (
+                        <details className="mt-2 text-xs text-slate-500">
+                          <summary className="cursor-pointer">Technical details</summary>
+                          <pre className="mt-2 whitespace-pre-wrap">{technicalError}</pre>
+                        </details>
+                      )}
+                    </div>
                     <button
                       onClick={() => setError(null)}
                       className="ml-auto p-1 hover:bg-red-100 rounded-lg transition-colors"

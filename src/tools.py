@@ -897,20 +897,21 @@ def _call_molecular_decision(
 
     client = create_client(config['llm_mode'], config['llm_api_key'])
 
-    if is_ollama_client(config['llm_mode']):
+    def request(active_messages: List[Dict]) -> str:
+        if is_ollama_client(config['llm_mode']):
+            params = {
+                "model": config['decision_model'],
+                "messages": active_messages,
+                "format": "json"
+            }
+            if supports_temperature(config['decision_model']):
+                params["options"] = {"temperature": 0.3}
+            response = client.chat(**params)
+            return response['message']['content']
+
         params = {
             "model": config['decision_model'],
-            "messages": messages,
-            "format": "json"
-        }
-        if supports_temperature(config['decision_model']):
-            params["options"] = {"temperature": 0.3}
-        response = client.chat(**params)
-        content = response['message']['content']
-    else:
-        params = {
-            "model": config['decision_model'],
-            "messages": messages,
+            "messages": active_messages,
             "response_format": {
                 "type": "json_schema",
                 "json_schema": prompts_config['json_schema']
@@ -919,11 +920,36 @@ def _call_molecular_decision(
         if supports_temperature(config['decision_model']):
             params["temperature"] = 0.3
         response = client.chat.completions.create(**params)
-        content = response.choices[0].message.content
+        return response.choices[0].message.content
+
+    content = request(messages)
+    decision = json.loads(_strip_markdown_json(content))
+
+    # Smaller local models can follow the predominantly German/English evidence
+    # instead of the requested output language. Retry once with an explicit,
+    # short correction while preserving medical names and classification terms.
+    body = f"{decision.get('konferenzbeschluss', '')} {decision.get('begründung', '')}"
+    chinese_chars = len(re.findall(r'[\u4e00-\u9fff]', body))
+    latin_words = len(re.findall(r'\b[A-Za-z]{3,}\b', body))
+    if chinese_chars < 12 and latin_words >= 8:
+        logger.warning("Molecular decision was not Chinese; retrying once with language correction")
+        retry_messages = messages + [
+            {"role": "assistant", "content": content},
+            {
+                "role": "user",
+                "content": (
+                    "上一版正文不是简体中文。请保持医学含义和JSON键不变，"
+                    "将konferenzbeschluss和begründung全部重写为简体中文。"
+                    "仅基因、变异、药物名及标准分类术语可保留英文。只输出有效JSON。"
+                )
+            },
+        ]
+        content = request(retry_messages)
+        decision = json.loads(_strip_markdown_json(content))
 
     save_prompt(case_id, 'decision_molecular', full_prompt, content,
                 output_dir=prompt_output_dir, model=prompt_model, run_id=prompt_run_id)
-    return json.loads(_strip_markdown_json(content))
+    return decision
 
 
 # ============================================================================
@@ -1064,7 +1090,9 @@ def _build_supplemental_reason(decision: Dict) -> str:
 
         pubmed_synthesis = (decision.get('pubmed_synthesis') or '').strip()
         pubmed_hits = hits.get('pubmed', [])
-        if pubmed_hits:
+        if decision.get('pubmed_retrieval_disabled'):
+            parts.append("【PubMed文献命中】\n本次测试已禁用PubMed检索。")
+        elif pubmed_hits:
             lines = [f"命中{len(pubmed_hits)}篇。" + (f" 综合结论：{pubmed_synthesis}" if pubmed_synthesis else '')]
             for i, hit in enumerate(pubmed_hits, 1):
                 pmid = str(hit.get('pmid') or '').strip()
@@ -1271,13 +1299,17 @@ def _decide_advanced(case: Dict, config: Dict, args: Dict) -> Dict:
     # 3. Search PubMed
     pubmed_articles = []
     crossref_articles = []
+    pubmed_retrieval_disabled = config.get('disable_pubmed_retrieval', False)
     conference_retrieval_disabled = config.get('disable_conference_retrieval', False)
     if pubmed_query:
-        try:
-            retriever = PubMedRetriever()
-            pubmed_articles = retriever.retrieve(pubmed_query, max_results=3, years_back=5)
-        except Exception as e:
-            logger.warning(f"  {TREE_CONT}   PubMed error: {e}")
+        if pubmed_retrieval_disabled:
+            logger.info(f"  {TREE_CONT}   PubMed: skipped (--disable-pubmed-retrieval)")
+        else:
+            try:
+                retriever = PubMedRetriever()
+                pubmed_articles = retriever.retrieve(pubmed_query, max_results=3, years_back=5)
+            except Exception as e:
+                logger.warning(f"  {TREE_CONT}   PubMed error: {e}")
 
         # 3b. Search Crossref (conference proceedings: ASH, ASCO, EHA)
         if conference_retrieval_disabled:
@@ -1404,6 +1436,7 @@ def _decide_advanced(case: Dict, config: Dict, args: Dict) -> Dict:
     decision['routing_reasoning'] = args.get('reasoning', '')
     decision['similar_cases_count'] = len(similar_cases)
     decision['case_retrieval_disabled'] = case_retrieval_disabled
+    decision['pubmed_retrieval_disabled'] = pubmed_retrieval_disabled
     decision['similar_cases_retrieved'] = len(similar_cases_raw)
     decision['similar_cases_after_reranking'] = len(similar_cases)
     decision['treatment_reranked'] = not case_retrieval_disabled
@@ -1790,12 +1823,15 @@ def _decide_molecular(case: Dict, config: Dict, args: Dict) -> Dict:
     pubmed_articles = []
     crossref_articles = []
     actionable = [r for r in results if r['classification'] in ['Oncogenic', 'Likely Oncogenic']]
+    pubmed_retrieval_disabled = config.get('disable_pubmed_retrieval', False)
 
     logger.info(f"  {TREE_BRANCH} Searching literature for {len(results)} variant(s)...")
     entity = case.get('sections', {}).get('entity')  # e.g., "Acute Myeloid Leukemia (AML)"
 
     # Search for actionable variants (targeted therapy focus)
-    if actionable:
+    if pubmed_retrieval_disabled:
+        logger.info(f"  {TREE_CONT}   PubMed: skipped (--disable-pubmed-retrieval)")
+    elif actionable:
         try:
             retriever = PubMedRetriever()
             for av in actionable:
@@ -1954,6 +1990,7 @@ def _decide_molecular(case: Dict, config: Dict, args: Dict) -> Dict:
         'fish_count': len(fish_results),
         'similar_cases_count': len(similar_cases),
         'case_retrieval_disabled': case_retrieval_disabled,
+        'pubmed_retrieval_disabled': pubmed_retrieval_disabled,
         'pubmed_articles_count': len(pubmed_articles),
         'crossref_articles_count': len(crossref_articles),
         'conference_retrieval_disabled': conference_retrieval_disabled,

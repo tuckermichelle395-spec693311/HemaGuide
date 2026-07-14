@@ -60,6 +60,12 @@ const MODE_CONFIG = {
     bgColor: 'bg-amber-50',
     borderColor: 'border-amber-200',
   },
+  PLAIN: {
+    label: 'PLAIN',
+    color: 'text-slate-700',
+    bgColor: 'bg-slate-50',
+    borderColor: 'border-slate-300',
+  },
   MOLECULAR: {
     label: 'MOLECULAR',
     color: 'text-hemaguide-700',
@@ -86,7 +92,9 @@ export function InterimResults({ caseResults, isProcessing }: InterimResultsProp
 
       <AnimatePresence mode="popLayout">
         {caseResults.map((caseResult, index) => {
-          const modeConfig = MODE_CONFIG[caseResult.mode] || MODE_CONFIG.GUIDELINE;
+          const displayedMode = caseResult.effective_mode || caseResult.mode;
+          const modeConfig = MODE_CONFIG[displayedMode] || MODE_CONFIG.GUIDELINE;
+          const downgraded = displayedMode !== caseResult.mode;
 
           return (
             <motion.div
@@ -120,7 +128,14 @@ export function InterimResults({ caseResults, isProcessing }: InterimResultsProp
                     </div>
                     <div>
                       <h4 className="font-medium text-slate-800">{caseResult.case_name}</h4>
-                      <span className={`text-xs ${modeConfig.color}`}>{modeConfig.label} Mode</span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`text-xs ${modeConfig.color}`}>{modeConfig.label} Mode</span>
+                        {downgraded && (
+                          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] text-slate-600">
+                            由 {caseResult.mode} 降级
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <span className="text-xs text-slate-400">

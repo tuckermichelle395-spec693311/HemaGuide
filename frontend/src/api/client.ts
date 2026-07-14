@@ -15,6 +15,25 @@ export interface ProcessResponse {
   job_id: string;
 }
 
+export interface SystemStatus {
+  ollama_connected: boolean;
+  ollama_error: string | null;
+  models: string[];
+  decision_models: string[];
+  embedding_models: string[];
+  recommended_decision_model: string | null;
+  recommended_embedding_model: string | null;
+  knowledge_base_ready: boolean;
+  flowchart_count: number;
+  python_path: string;
+  python_ready: boolean;
+}
+
+export async function getSystemStatus(): Promise<SystemStatus> {
+  const response = await api.get<SystemStatus>('/system-status');
+  return response.data;
+}
+
 export async function uploadFile(file: File): Promise<UploadResponse> {
   const formData = new FormData();
   formData.append('file', file);
@@ -60,6 +79,10 @@ export async function startProcessing(
   const response = await api.post<ProcessResponse>('/process', {
     llm_mode: config.llmMode,
     decision_model: config.decisionModel,
+    use_flowchart: config.useFlowchart,
+    use_historical_cases: config.useHistoricalCases,
+    use_pubmed: config.usePubMed,
+    use_conferences: config.useConferences,
     files,
   });
   return response.data;

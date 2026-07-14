@@ -87,6 +87,10 @@ export type LLMMode = 'ollama-local';
 export interface Config {
   llmMode: LLMMode;
   decisionModel: string;
+  useFlowchart: boolean;
+  useHistoricalCases: boolean;
+  usePubMed: boolean;
+  useConferences: boolean;
 }
 
 export type ProcessingStatus =
@@ -103,6 +107,9 @@ export interface CaseResult {
   case_id: string;
   case_name: string;
   mode: 'GUIDELINE' | 'ADVANCED' | 'MOLECULAR';
+  effective_mode?: 'GUIDELINE' | 'ADVANCED' | 'MOLECULAR' | 'PLAIN';
+  synthesis_failed?: boolean;
+  synthesis_failure_reason?: string | null;
   konferenzbeschluss: string;
   begründung: string;
   supplemental_reason?: string;
@@ -121,4 +128,19 @@ export interface StatusUpdate {
   case_result?: CaseResult;
   case_results?: CaseResult[];
   result?: AgentResult;
+  extraction_previews?: ExtractionPreview[];
+  technical_message?: string;
+}
+
+export interface ExtractionPreview {
+  filename: string;
+  diagnosis: string;
+  entity: string;
+  age: string | number;
+  ecog: string | number;
+  tumorboard_type: string;
+  is_molecular: boolean;
+  predicted_mode: string;
+  variants: Array<{ gene: string; aa_change: string; vaf?: number | string | null }>;
+  fish_count: number;
 }

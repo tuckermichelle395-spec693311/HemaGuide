@@ -229,26 +229,26 @@ system_prompt_molecular: |
 # Case template for MOLECULAR mode
 molecular_case_template: |
 
-  === MOLEKULARE ANALYSE ===
-  Quelle: {source_file}
+  === 分子分析 ===
+  来源：{source_file}
 
-  PATIENT:
-  - Alter: {age}
+  患者信息：
+  - 年龄：{age}
   - ECOG: {ECOG}
-  - Hauptdiagnose: {main_diagnosis}
-  - Nebendiagnosen: {secondary_diagnoses}
-  - Bisherige Therapien: {prior_treatments}
+  - 主要诊断：{main_diagnosis}
+  - 合并诊断：{secondary_diagnoses}
+  - 既往治疗：{prior_treatments}
 
-  KLINISCHE FRAGESTELLUNG:
+  临床问题：
   {question_long}
 
-  === ZYTOGENETIK (FISH-BEFUNDE) ===
+  === 细胞遗传学（FISH结果）===
   {fish_findings}
 
-  === VARIANTENKLASSIFIKATION (Horak et al. 2022) ===
+  === 变异分类（Horak et al. 2022）===
   {classification_summary}
 
-  === DETAILLIERTE KRITERIEN ===
+  === 详细评分依据 ===
   {criteria_details}
 
 # Molecular guidelines section header (for PubMed articles)
@@ -296,30 +296,15 @@ molecular_crossref_synthesis_section: |
 # Task instructions for MOLECULAR mode
 task_instructions_molecular: |
 
-  === IHRE AUFGABE ===
+  === 任务 ===
 
-  Befolgen Sie folgende Anweisungen. Die Formulierung des KONFERENZBESCHLUSS hat höchste Priorität.
+  1. 根据 Horak et al. 2022 分析变异分类和/或细胞遗传学（FISH）结果，核对每个变异的评分与最高分类。
+  2. 如有 PubMed 证据，评估靶向治疗选择、证据等级和研究阶段。
+  3. 根据分类给出明确建议：Oncogenic/Likely Oncogenic 应说明药物及证据；高分 VUS（≥4）可建议入组试验或重新评估；缺少证据的 VUS 建议随访并在进展时复测；Benign/Likely Benign 应说明未发现治疗相关变异。
+  4. 结合变异分类、FISH和文献证据说明理由。
 
-  1. Analysieren Sie die Variantenklassifikation nach Horak et al. 2022 und/oder die Zytogenetik (FISH-Befunde)
-     - Horak et al. 2022:
-         - Bewerten Sie die Punktevergabe für jede Variante
-         - Identifizieren Sie die höchste Klassifikation (Oncogenic > Likely Oncogenic > VUS > Likely Benign > Benign)
-     - FISH-Befunde:
-         - Achten Sie auf therapierelevante Veränderungen
-
-  2. Bewerten Sie die PubMed-Evidenz für zielgerichtete Therapien, wenn vorhanden
-     - Extrahieren Sie konkrete Therapieoptionen aus den Artikeln
-     - Beachten Sie Evidenzlevel und Studienphase
-
-  3. Formulieren Sie einen KONFERENZBESCHLUSS basierend auf der Klassifikation:
-     - Oncogenic/Likely Oncogenic: Konkrete Therapieempfehlung mit Substanz und Evidenz
-     - VUS mit hoher Punktzahl (≥4): Studieneinschluss oder Re-Evaluation empfehlen
-     - VUS ohne Evidenz: Watchful Waiting, erneute Testung bei Progress
-     - Benign/Likely Benign: "Keine therapierelevanten Varianten identifiziert"
-
-  4. Begründen Sie Ihre Entscheidung mit Bezug auf Klassifikation und Literatur
-
-  Begrenzen Sie Ihre Teilantworten auf 400 Zeichen oder weniger.
+  输出正文必须使用简体中文。基因、变异、药物名和 Oncogenic、Likely Oncogenic、VUS、Likely Benign、Benign 等标准术语可保留英文。
+  "konferenzbeschluss"和"begründung"两个字段均不得输出英文或德文句子，每个字段不超过400字。
 
 # JSON Schema for OpenAI structured outputs
 # This ensures the LLM always returns properly formatted decisions
