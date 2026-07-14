@@ -1065,14 +1065,18 @@ def _build_supplemental_reason(decision: Dict) -> str:
         if pubmed_hits:
             lines = [f"命中{len(pubmed_hits)}篇。" + (f" 综合结论：{pubmed_synthesis}" if pubmed_synthesis else '')]
             for i, hit in enumerate(pubmed_hits, 1):
-                ids = [f"PMID {hit['pmid']}" for _ in [0] if hit.get('pmid')]
-                ids += [f"DOI {hit['doi']}" for _ in [0] if hit.get('doi')]
-                links = [hit.get('url', ''), hit.get('doi_url', '')]
+                pmid = str(hit.get('pmid') or '').strip()
+                doi = _normalize_doi(hit.get('doi', ''))
                 detail = hit.get('key_finding_zh', '')
-                lines.append(f"{i}. {hit.get('title') or '未提供标题'}" + (f"；{'；'.join(ids)}" if ids else ''))
+                if pmid:
+                    pubmed_url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+                    lines.append(f"{i}. PMID：{pmid}｜{pubmed_url}")
+                elif doi:
+                    lines.append(f"{i}. DOI：{doi}｜https://doi.org/{doi}")
+                else:
+                    lines.append(f"{i}. 暂无可核验的 PMID 或 DOI。")
                 if detail:
                     lines.append(f"   关键发现：{detail}")
-                lines.extend(f"   链接：{link}" for link in links if link)
             parts.append("【PubMed文献命中】\n" + "\n".join(lines))
         else:
             parts.append("【PubMed文献命中】\n未检索到通过相关性筛选的PubMed文献。")
