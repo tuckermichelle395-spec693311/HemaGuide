@@ -1,0 +1,103 @@
+﻿case_id,group,role,dataset_version,diagnosis,phase,age,sex,ECOG,biomarkers,relative_path
+LEU-001,leukemia,query,existing-50,核心结合因子AML，RUNX1::RUNX1T1阳性,初诊、适合强化治疗,41,女,0,t(8;21)，KIT D816V，CD33阳性,leukemia/query/SYN_LEU_001.docx
+LEU-002,leukemia,history,existing-50,NPM1突变AML,初诊、中年,55,男,1,NPM1突变，FLT3-ITD低比值,leukemia/history/SYN_LEU_002.docx
+LEU-003,leukemia,history,existing-50,FLT3-ITD阳性AML,首次复发,47,女,1,FLT3-ITD高比值，DNMT3A突变,leukemia/history/SYN_LEU_003.docx
+LEU-004,leukemia,history,existing-50,IDH1突变AML,老年、不适合强化,76,男,2,IDH1 R132C，SRSF2突变,leukemia/history/SYN_LEU_004.docx
+LEU-005,leukemia,history,existing-50,TP53多命中AML,难治、不良风险,63,女,1,复杂核型，TP53 VAF 62%,leukemia/history/SYN_LEU_005.docx
+LEU-006,leukemia,history,existing-50,治疗相关AML,初诊、高危,68,男,1,复杂核型，ASXL1和RUNX1突变,leukemia/history/SYN_LEU_006.docx
+LEU-007,leukemia,history,existing-50,CBFB::MYH11阳性AML,巩固后分子复发,38,女,0,inv(16)，KIT exon 8突变,leukemia/history/SYN_LEU_007.docx
+LEU-008,leukemia,history,existing-50,急性早幼粒细胞白血病,初诊高危、DIC,34,男,2,PML::RARA阳性，白细胞28×10^9/L,leukemia/history/SYN_LEU_008.docx
+LEU-009,leukemia,history,existing-50,急性早幼粒细胞白血病,分子复发,46,女,0,PML::RARA低水平复阳,leukemia/history/SYN_LEU_009.docx
+LEU-010,leukemia,history,existing-50,Ph阳性B-ALL,初诊、适合强化,29,女,0,BCR::ABL1 p190，IKZF1plus,leukemia/history/SYN_LEU_010.docx
+LEU-011,leukemia,history,existing-50,Ph阴性B-ALL,第二次复发,43,男,1,CD19阳性，CD22阳性,leukemia/history/SYN_LEU_011.docx
+LEU-012,leukemia,history,existing-50,ETP-ALL,诱导失败,22,男,1,ETP免疫表型，NOTCH1阴性,leukemia/history/SYN_LEU_012.docx
+LEU-013,leukemia,history,existing-50,T-ALL,巩固期MRD持续阳性,31,女,0,NOTCH1突变，流式MRD 0.08%,leukemia/history/SYN_LEU_013.docx
+LEU-014,leukemia,history,existing-50,混合表型急性白血病,初诊、系别模糊,36,男,1,B/髓系MPAL，KMT2A重排,leukemia/history/SYN_LEU_014.docx
+LEU-015,leukemia,history,existing-50,慢性髓性白血病,慢性期、一线不耐受,52,女,0,BCR::ABL1 e14a2，无耐药突变,leukemia/history/SYN_LEU_015.docx
+LEU-016,leukemia,history,existing-50,慢性髓性白血病,加速期、TKI耐药,61,男,1,BCR::ABL1 T315I,leukemia/history/SYN_LEU_016.docx
+LEU-017,leukemia,history,existing-50,慢性髓性白血病急变,髓系急变,45,男,2,BCR::ABL1，新增RUNX1突变,leukemia/history/SYN_LEU_017.docx
+LEU-018,leukemia,history,existing-50,慢性髓单核细胞白血病,增殖型、高危,72,女,1,ASXL1、NRAS和SRSF2突变,leukemia/history/SYN_LEU_018.docx
+LEU-019,leukemia,history,existing-50,慢性髓单核细胞白血病,向AML转化,66,男,2,NRAS、SETBP1突变，原始细胞24%,leukemia/history/SYN_LEU_019.docx
+LEU-020,leukemia,history,existing-50,高危骨髓增生异常综合征,进展、输血依赖,64,女,1,复杂核型，EZH2和ASXL1突变,leukemia/history/SYN_LEU_020.docx
+LEU-021,leukemia,history,existing-50,幼年型髓单核细胞白血病,新诊断、高危,7,男,1,PTPN11突变，单体细7,leukemia/history/SYN_LEU_021.docx
+LEU-022,leukemia,history,existing-50,毛细胞白血病,症状性初诊,59,男,0,BRAF V600E阳性,leukemia/history/SYN_LEU_022.docx
+LEU-023,leukemia,history,existing-50,T细胞大颗粒淋巴细胞白血病,慢性、症状性细胞减少,69,女,1,STAT3突变，TCR克隆性阳性,leukemia/history/SYN_LEU_023.docx
+LEU-024,leukemia,history,existing-50,B细胞前淋巴细胞白血病,进展性、高肿瘤负荷,71,男,2,TP53缺失，IGH::MYC阳性,leukemia/history/SYN_LEU_024.docx
+LEU-025,leukemia,history,existing-50,系统性肥大细胞增生症伴髓系肿瘤,进展性、器官损害,57,女,1,KIT D816V，SRSF2/ASXL1突变,leukemia/history/SYN_LEU_025.docx
+LEU-026,leukemia,history,new-102,KMT2A重排AML,初诊、高白细胞,44,女,1,KMT2A::MLLT3，RAS通路突变,leukemia/history/SYN_LEU_026.docx
+LEU-027,leukemia,history,new-102,MECOM重排AML,初诊、不良风险,50,男,1,inv(3)/MECOM，单7,leukemia/history/SYN_LEU_027.docx
+LEU-028,leukemia,history,new-102,NUP98::NSD1阳性AML,儿童初诊、FLT3阳性,12,女,1,NUP98::NSD1，FLT3-ITD，WT1高表达,leukemia/history/SYN_LEU_028.docx
+LEU-029,leukemia,history,new-102,AML伴骨髓增生异常相关基因突变,初诊、继发性,70,男,2,SRSF2、BCOR和STAG2突变,leukemia/history/SYN_LEU_029.docx
+LEU-030,leukemia,history,new-102,NPM1突变AML,异基因移植后血液学复发,48,女,1,NPM1突变，FLT3野生型，供者嵌合率71%,leukemia/history/SYN_LEU_030.docx
+LEU-031,leukemia,history,new-102,NPM1突变AML,化疗后分子复发,57,男,0,NPM1 MRD连续两次上升，形态学缓解,leukemia/history/SYN_LEU_031.docx
+LEU-032,leukemia,history,new-102,IDH2突变AML,低强度治疗后进展,74,女,2,IDH2 R140Q，RUNX1突变,leukemia/history/SYN_LEU_032.docx
+LEU-033,leukemia,history,new-102,FLT3-TKD阳性AML,FLT3抑制剂后难治,60,男,1,FLT3 D835，WT1突变,leukemia/history/SYN_LEU_033.docx
+LEU-034,leukemia,history,new-102,AML,骨髓缓解期孤立中枢复发,40,女,1,NPM1野生型，脑脊液流式阳性,leukemia/history/SYN_LEU_034.docx
+LEU-035,leukemia,history,new-102,AML,姊娠中期初诊,32,女,1,CEBPA bZIP区单突变，FLT3阴性,leukemia/history/SYN_LEU_035.docx
+LEU-036,leukemia,history,new-102,AML,初诊合并侵袭性真菌感染,67,男,3,DNMT3A、TET2突变，中间风险核型,leukemia/history/SYN_LEU_036.docx
+LEU-037,leukemia,history,new-102,Ph样B-ALL,初诊、诱导后MRD阳性,19,男,0,CRLF2重排，JAK2 R683G，MRD 1.2%,leukemia/history/SYN_LEU_037.docx
+LEU-038,leukemia,history,new-102,Ph阴性B-ALL,blinatumomab后MRD持续,36,女,0,CD19阳性，IKZF1缺失，MRD 0.03%,leukemia/history/SYN_LEU_038.docx
+LEU-039,leukemia,history,new-102,复发B-ALL,inotuzumab后缓解、待移植,54,男,1,CD22阳性，MRD阴性,leukemia/history/SYN_LEU_039.docx
+LEU-040,leukemia,history,new-102,T-ALL,首次骨髓复发,25,男,1,CD7强阳性，NOTCH1突变,leukemia/history/SYN_LEU_040.docx
+LEU-041,leukemia,history,new-102,ETP-ALL,异基因移植后复发,30,女,2,ETP免疫表型，FLT3突变,leukemia/history/SYN_LEU_041.docx
+LEU-042,leukemia,history,new-102,BCR::ABL1阳性混合表型急性白血病,老年初诊,69,男,2,B/髓系MPAL，BCR::ABL1 p210,leukemia/history/SYN_LEU_042.docx
+LEU-043,leukemia,history,new-102,慢性髓性白血病,无治疗缓解尝试后分子复发,46,女,0,BCR::ABL1回升至0.18% IS，无耐药突变,leukemia/history/SYN_LEU_043.docx
+LEU-044,leukemia,history,new-102,慢性髓性白血病,淋系急变、多TKI耐药,58,男,2,BCR::ABL1 T315I，CD19阳性,leukemia/history/SYN_LEU_044.docx
+LEU-045,leukemia,history,new-102,MDS伴原始细胞增多,高危、移植候选,62,女,1,U2AF1、RUNX1和ASXL1突变，原始细胞12%,leukemia/history/SYN_LEU_045.docx
+LEU-046,leukemia,history,new-102,低危MDS伴del(5q),lenalidomide后失应答,73,女,1,del(5q)，新出现TP53低负荷克隆,leukemia/history/SYN_LEU_046.docx
+LEU-047,leukemia,history,new-102,慢性髓单核细胞白血病,去甲基化后部分缓解、待移植,59,男,1,ASXL1、TET2、CBL突变,leukemia/history/SYN_LEU_047.docx
+LEU-048,leukemia,history,new-102,MDS/MPN伴中性粒细胞增多,进展性、青年,39,女,1,SETBP1、ETNK1和ASXL1突变，BCR::ABL1阴性,leukemia/history/SYN_LEU_048.docx
+LEU-049,leukemia,history,new-102,BCR::ABL1阴性骨髓增殖性肿瘤,转化为AML,65,男,2,JAK2 V617F，TP53和NRAS突变,leukemia/history/SYN_LEU_049.docx
+LEU-050,leukemia,history,new-102,母细胞性浆细胞样树突细胞肿瘤,初诊、皮肤与骨髓受累,43,男,0,CD123强阳性，TCF4阳性,leukemia/history/SYN_LEU_050.docx
+LEU-051,leukemia,history,new-102,慢性淋巴细胞白血病,BTK和BCL2抑制剂后进展,68,女,1,del(17p)，TP53突变，BTK C481S,leukemia/history/SYN_LEU_051.docx
+LYM-001,lymphoma,query,existing-50,弥漫性大B细胞淋巴瘤，GCB型,初诊、晚期,58,男,1,MYC阴性，BCL2蛋白高表达,lymphoma/query/SYN_LYM_001.docx
+LYM-002,lymphoma,history,existing-50,弥漫性大B细胞淋巴瘤，ABC型,一线难治,64,女,1,CD19阳性，MYD88 L265P,lymphoma/history/SYN_LYM_002.docx
+LYM-003,lymphoma,history,existing-50,高级别B细胞淋巴瘤,初诊、双打击,49,男,1,MYC和BCL2重排,lymphoma/history/SYN_LYM_003.docx
+LYM-004,lymphoma,history,existing-50,弥漫性大B细胞淋巴瘤,CAR-T后复发,61,女,2,CD19弱阳性，CD20阳性,lymphoma/history/SYN_LYM_004.docx
+LYM-005,lymphoma,history,existing-50,弥漫性大B细胞淋巴瘤,晚期复发、移植适合,52,男,0,CD20阳性，无MYC重排,lymphoma/history/SYN_LYM_005.docx
+LYM-006,lymphoma,history,existing-50,原发中枢神经系淋巴瘤,初诊、老年,73,女,2,MYD88 L265P，CD20阳性,lymphoma/history/SYN_LYM_006.docx
+LYM-007,lymphoma,history,existing-50,原发纵隔大B细胞淋巴瘤,一线难治,35,女,1,CD30阳性，PD-L1高表达,lymphoma/history/SYN_LYM_007.docx
+LYM-008,lymphoma,history,existing-50,原发纵隔大B细胞淋巴瘤,CAR-T后局部复发,42,男,0,CD19阴性，CD30阳性,lymphoma/history/SYN_LYM_008.docx
+LYM-009,lymphoma,history,existing-50,滤泡性淋巴瘤1–2级,低肿瘤负荷初诊,60,女,0,t(14;18)，FLIPI 1,lymphoma/history/SYN_LYM_009.docx
+LYM-010,lymphoma,history,existing-50,滤泡性淋巴瘤2级,高肿瘤负荷初诊,67,男,1,EZH2突变，FLIPI 3,lymphoma/history/SYN_LYM_010.docx
+LYM-011,lymphoma,history,existing-50,滤泡性淋巴瘤,POD24、早期复发,56,女,1,CD20阳性，无转化证据,lymphoma/history/SYN_LYM_011.docx
+LYM-012,lymphoma,history,existing-50,套细胞淋巴瘤,年轻、初诊,51,男,0,t(11;14)，TP53野生型，ki-67 35%,lymphoma/history/SYN_LYM_012.docx
+LYM-013,lymphoma,history,existing-50,套细胞淋巴瘤,老年初诊,78,女,2,t(11;14)，ki-67 20%,lymphoma/history/SYN_LYM_013.docx
+LYM-014,lymphoma,history,existing-50,套细胞淋巴瘤,BTK抑制剂后进展,65,男,1,TP53突变，ki-67 70%,lymphoma/history/SYN_LYM_014.docx
+LYM-015,lymphoma,history,existing-50,经典型霍奇金淋巴瘤,早期不良风险,27,女,0,EBV阴性，纵隔大包块,lymphoma/history/SYN_LYM_015.docx
+LYM-016,lymphoma,history,existing-50,经典型霍奇金淋巴瘤,晚期初诊,44,男,1,CD30阳性，IPS 4,lymphoma/history/SYN_LYM_016.docx
+LYM-017,lymphoma,history,existing-50,经典型霍奇金淋巴瘤,自体移植后复发,39,女,1,CD30阳性，PD-L1高表达,lymphoma/history/SYN_LYM_017.docx
+LYM-018,lymphoma,history,existing-50,MALT淋巴瘤,胃局限期、初诊,62,男,0,API2::MALT1阴性，幽门螺杆菌阳性,lymphoma/history/SYN_LYM_018.docx
+LYM-019,lymphoma,history,existing-50,脾边缘区淋巴瘤,症状性、细胞减少,70,女,1,NOTCH2突变，IGH克隆性,lymphoma/history/SYN_LYM_019.docx
+LYM-020,lymphoma,history,existing-50,外周T细胞淋巴瘤，NOS,初诊、高危,55,男,1,TCR克隆性，CD30阴性,lymphoma/history/SYN_LYM_020.docx
+LYM-021,lymphoma,history,existing-50,血管免疫母T细胞淋巴瘤,首次复发,63,女,2,TET2、DNMT3A和RHOA G17V突变,lymphoma/history/SYN_LYM_021.docx
+LYM-022,lymphoma,history,existing-50,ALK阳性间变性大细胞淋巴瘤,初诊、晚期,32,男,0,NPM::ALK阳性，CD30强阳性,lymphoma/history/SYN_LYM_022.docx
+LYM-023,lymphoma,history,existing-50,伯基特淋巴瘤,初诊、高肿瘤负荷,26,女,1,MYC重排，EBV阴性,lymphoma/history/SYN_LYM_023.docx
+LYM-024,lymphoma,history,existing-50,鼻型结外NK/T细胞淋巴瘤,局限期初诊,48,男,1,EBER阳性，血浆EBV-DNA升高,lymphoma/history/SYN_LYM_024.docx
+LYM-025,lymphoma,history,existing-50,移植后淋巴增殖性疾病,肾移植后、EBV阳性,50,女,2,EBER阳性，CD20阳性,lymphoma/history/SYN_LYM_025.docx
+LYM-026,lymphoma,history,new-102,原发睪丸弥漫性大B细胞淋巴瘤,初诊、局限期,66,男,1,MYD88 L265P，CD20阳性,lymphoma/history/SYN_LYM_026.docx
+LYM-027,lymphoma,history,new-102,血管内大B细胞淋巴瘤,初诊、多器官受累,72,女,3,CD20阳性，MYD88 L265P,lymphoma/history/SYN_LYM_027.docx
+LYM-028,lymphoma,history,new-102,原发皮肤弥漫性大B细胞淋巴瘤，腿型,局部复发,79,女,1,BCL2和MUM1阳性，MYD88突变,lymphoma/history/SYN_LYM_028.docx
+LYM-029,lymphoma,history,new-102,EBV阳性弥漫性大B细胞淋巴瘤,老年初诊,81,男,2,EBER弥漫阳性，CD20阳性，PD-L1高表达,lymphoma/history/SYN_LYM_029.docx
+LYM-030,lymphoma,history,new-102,滤泡性淋巴瘤转化为DLBCL,首次组织学转化,61,女,1,MYC野生型，BCL2重排，CD20阳性,lymphoma/history/SYN_LYM_030.docx
+LYM-031,lymphoma,history,new-102,弥漫性大B细胞淋巴瘤,双特异性抗体后进展,57,男,2,CD19阴性，CD20弱阳性，CD22阳性,lymphoma/history/SYN_LYM_031.docx
+LYM-032,lymphoma,history,new-102,弥漫性大B细胞淋巴瘤,自体移植后晚期孤立骨复发,48,女,0,CD20阳性，GCB型,lymphoma/history/SYN_LYM_032.docx
+LYM-033,lymphoma,history,new-102,原发中枢神经系统淋巴瘤,自体移植后复发,59,男,1,MYD88 L265P，CD20阳性,lymphoma/history/SYN_LYM_033.docx
+LYM-034,lymphoma,history,new-102,原发玻璃体视网膜淋巴瘤,双眼受累、无脑实质病灶,63,女,0,玻璃体IL-10升高，MYD88 L265P,lymphoma/history/SYN_LYM_034.docx
+LYM-035,lymphoma,history,new-102,滤泡性淋巴瘤,多线复发、EZH2突变,65,男,1,EZH2 Y646N，CD20阳性,lymphoma/history/SYN_LYM_035.docx
+LYM-036,lymphoma,history,new-102,滤泡性淋巴瘤,怀疑转化、待再活检,54,女,1,t(14;18)，新出现LDH升高,lymphoma/history/SYN_LYM_036.docx
+LYM-037,lymphoma,history,new-102,白血病样非淋巴结性套细胞淋巴瘤,无症状、低增殖,62,男,0,SOX11阴性，t(11;14)，ki-67 5%,lymphoma/history/SYN_LYM_037.docx
+LYM-038,lymphoma,history,new-102,套细胞淋巴瘤,CAR-T后CD19阴性复发,60,女,2,CD19阴性，CD20阳性，TP53突变,lymphoma/history/SYN_LYM_038.docx
+LYM-039,lymphoma,history,new-102,华氏巨球蛋白血症/淋巴浆细胞淋巴瘤,BTK抑制剂不耐受,71,男,1,MYD88 L265P，CXCR4野生型,lymphoma/history/SYN_LYM_039.docx
+LYM-040,lymphoma,history,new-102,结内边缘区淋巴瘤,初诊、高肿瘤负荷,64,女,1,KLF2突变，CD20阳性,lymphoma/history/SYN_LYM_040.docx
+LYM-041,lymphoma,history,new-102,边缘区淋巴瘤转化为DLBCL,首次转化,69,男,2,TP53突变，MYC蛋白高表达,lymphoma/history/SYN_LYM_041.docx
+LYM-042,lymphoma,history,new-102,小淋巴细胞淋巴瘤,怀疑Richter转化,67,女,2,TP53突变，某淋巴结SUVmax 19,lymphoma/history/SYN_LYM_042.docx
+LYM-043,lymphoma,history,new-102,经典型霍奇金淋巴瘤,PD-1抑制后缓解、待异基因移植,33,男,0,PD-L1高表达，CD30阳性,lymphoma/history/SYN_LYM_043.docx
+LYM-044,lymphoma,history,new-102,经典型霍奇金淋巴瘤,妊娠早期初诊,29,女,0,CD30阳性，EBER阴性,lymphoma/history/SYN_LYM_044.docx
+LYM-045,lymphoma,history,new-102,结节性淋巴细胞为主型B细胞淋巴瘤,转化为大B细胞淋巴瘤,45,男,0,LP细胞CD20阳性，CD30阴性,lymphoma/history/SYN_LYM_045.docx
+LYM-046,lymphoma,history,new-102,滤泡辅助T细胞表型的结内外周T细胞淋巴瘤,初诊、高危,58,女,1,RHOA G17V，TET2和IDH2 R172突变,lymphoma/history/SYN_LYM_046.docx
+LYM-047,lymphoma,history,new-102,ALK阴性间变性大细胞淋巴瘤,初诊、DUSP22重排,52,男,1,CD30强阳性，DUSP22重排，TP63阴性,lymphoma/history/SYN_LYM_047.docx
+LYM-048,lymphoma,history,new-102,肝脾T细胞淋巴瘤,初诊、年轻高危,28,男,2,TCRγδ克隆，i(7q)，STAT5B突变,lymphoma/history/SYN_LYM_048.docx
+LYM-049,lymphoma,history,new-102,成人T细胞白血病/淋巴瘤,急性型、高钙血症,55,女,2,HTLV-1阳性，CCR4高表达,lymphoma/history/SYN_LYM_049.docx
+LYM-050,lymphoma,history,new-102,蕲样肉芽肿/Sézary综合征,皮肤红皮病期、多线治疗,70,男,1,CCR4阳性，外周血Sézary细胞克隆,lymphoma/history/SYN_LYM_050.docx
+LYM-051,lymphoma,history,new-102,原发皮肤γδT细胞淋巴瘤,初诊、皮下与骨髓受累,41,女,1,TCRγδ克隆，CD56阳性，EBER阴性,lymphoma/history/SYN_LYM_051.docx

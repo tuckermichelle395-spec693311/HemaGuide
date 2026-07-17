@@ -1,0 +1,103 @@
+﻿case_id,group,role,diagnosis,phase,age,ECOG,biomarkers,prior_treatment,nearest_case_id,character_3gram_jaccard
+LEU-001,leukemia,query,核心结合因子AML，RUNX1::RUNX1T1阳性,初诊、适合强化治疗,41,0,t(8;21)，KIT D816V，CD33阳性,无,LEU-010,0.0591
+LEU-002,leukemia,history,NPM1突变AML,初诊、中年,55,1,NPM1突变，FLT3-ITD低比值,无,LEU-028,0.0755
+LEU-003,leukemia,history,FLT3-ITD阳性AML,首次复发,47,1,FLT3-ITD高比值，DNMT3A突变,7+3联合米哚洛；HiDAC巩固,LEU-040,0.0914
+LEU-004,leukemia,history,IDH1突变AML,老年、不适合强化,76,2,IDH1 R132C，SRSF2突变,无,LEU-029,0.1341
+LEU-005,leukemia,history,TP53多命中AML,难治、不良风险,63,1,复杂核型，TP53 VAF 62%,CPX-351诱导未缓解,LEU-033,0.0805
+LEU-006,leukemia,history,治疗相关AML,初诊、高危,68,1,复杂核型，ASXL1和RUNX1突变,乳腺癌化疗史8年,LEU-026,0.0714
+LEU-007,leukemia,history,CBFB::MYH11阳性AML,巩固后分子复发,38,0,inv(16)，KIT exon 8突变,7+3联合GO；3个疗程HiDAC,LEU-031,0.1285
+LEU-008,leukemia,history,急性早幼粒细胞白血病,初诊高危、DIC,34,2,PML::RARA阳性，白细胞28×10^9/L,无,LEU-009,0.0838
+LEU-009,leukemia,history,急性早幼粒细胞白血病,分子复发,46,0,PML::RARA低水平复阳,ATRA联合ATO获得缓解,LEU-008,0.0838
+LEU-010,leukemia,history,Ph阳性B-ALL,初诊、适合强化,29,0,BCR::ABL1 p190，IKZF1plus,无,LEU-044,0.0884
+LEU-011,leukemia,history,Ph阴性B-ALL,第二次复发,43,1,CD19阳性，CD22阳性,多药化疗；异基因移植；blinatumomab,LEU-038,0.1111
+LEU-012,leukemia,history,ETP-ALL,诱导失败,22,1,ETP免疫表型，NOTCH1阴性,儿童样ALL诱导,LEU-041,0.0798
+LEU-013,leukemia,history,T-ALL,巩固期MRD持续阳性,31,0,NOTCH1突变，流式MRD 0.08%,多药ALL诱导和早期巩固,LEU-038,0.0815
+LEU-014,leukemia,history,混合表型急性白血病,初诊、系别模糊,36,1,B/髓系MPAL，KMT2A重排,无,LEU-042,0.1043
+LEU-015,leukemia,history,慢性髓性白血病,慢性期、一线不耐受,52,0,BCR::ABL1 e14a2，无耐药突变,imatinib后水肿和肌痛,LEU-043,0.1193
+LEU-016,leukemia,history,慢性髓性白血病,加速期、TKI耐药,61,1,BCR::ABL1 T315I,imatinib；dasatinib；nilotinib,LEU-044,0.2202
+LEU-017,leukemia,history,慢性髓性白血病急变,髓系急变,45,2,BCR::ABL1，新增RUNX1突变,bosutinib治疗3年,LEU-044,0.1299
+LEU-018,leukemia,history,慢性髓单核细胞白血病,增殖型、高危,72,1,ASXL1、NRAS和SRSF2突变,hydroxyurea,LEU-048,0.1033
+LEU-019,leukemia,history,慢性髓单核细胞白血病,向AML转化,66,2,NRAS、SETBP1突变，原始细胞24%,azacitidine 8个疗程,LEU-032,0.1215
+LEU-020,leukemia,history,高危骨髓增生异常综合征,进展、输血依赖,64,1,复杂核型，EZH2和ASXL1突变,支持治疗,LEU-018,0.0854
+LEU-021,leukemia,history,幼年型髓单核细胞白血病,新诊断、高危,7,1,PTPN11突变，单体细7,无,LEU-047,0.0471
+LEU-022,leukemia,history,毛细胞白血病,症状性初诊,59,0,BRAF V600E阳性,无,LEU-023,0.0552
+LEU-023,leukemia,history,T细胞大颗粒淋巴细胞白血病,慢性、症状性细胞减少,69,1,STAT3突变，TCR克隆性阳性,G-CSF间歇支持,LEU-022,0.0552
+LEU-024,leukemia,history,B细胞前淋巴细胞白血病,进展性、高肿瘤负荷,71,2,TP53缺失，IGH::MYC阳性,BTK抑制剂短暂缓解,LEU-051,0.0721
+LEU-025,leukemia,history,系统性肥大细胞增生症伴髓系肿瘤,进展性、器官损害,57,1,KIT D816V，SRSF2/ASXL1突变,midostaurin,LEU-020,0.0430
+LEU-026,leukemia,history,KMT2A重排AML,初诊、高白细胞,44,1,KMT2A::MLLT3，RAS通路突变,无,LEU-002,0.0719
+LEU-027,leukemia,history,MECOM重排AML,初诊、不良风险,50,1,inv(3)/MECOM，单7,无,LEU-026,0.0373
+LEU-028,leukemia,history,NUP98::NSD1阳性AML,儿童初诊、FLT3阳性,12,1,NUP98::NSD1，FLT3-ITD，WT1高表达,无,LEU-002,0.0755
+LEU-029,leukemia,history,AML伴骨髓增生异常相关基因突变,初诊、继发性,70,2,SRSF2、BCOR和STAG2突变,既往未明确诊断的长期大细胞性贫血,LEU-004,0.1341
+LEU-030,leukemia,history,NPM1突变AML,异基因移植后血液学复发,48,1,NPM1突变，FLT3野生型，供者嵌合率71%,7+3；HiDAC；异基因移植,LEU-041,0.1111
+LEU-031,leukemia,history,NPM1突变AML,化疗后分子复发,57,0,NPM1 MRD连续两次上升，形态学缓解,7+3；3个疗程HiDAC,LEU-007,0.1285
+LEU-032,leukemia,history,IDH2突变AML,低强度治疗后进展,74,2,IDH2 R140Q，RUNX1突变,azacitidine联合venetoclax 9个疗程,LEU-019,0.1215
+LEU-033,leukemia,history,FLT3-TKD阳性AML,FLT3抑制剂后难治,60,1,FLT3 D835，WT1突变,强化化疗；gilteritinib,LEU-005,0.0805
+LEU-034,leukemia,history,AML,骨髓缓解期孤立中枢复发,40,1,NPM1野生型，脑脊液流式阳性,7+3；HiDAC巩固,LEU-030,0.0621
+LEU-035,leukemia,history,AML,姊娠中期初诊,32,1,CEBPA bZIP区单突变，FLT3阴性,无,LEU-002,0.0307
+LEU-036,leukemia,history,AML,初诊合并侵袭性真菌感染,67,3,DNMT3A、TET2突变，中间风险核型,无,LEU-003,0.0273
+LEU-037,leukemia,history,Ph样B-ALL,初诊、诱导后MRD阳性,19,0,CRLF2重排，JAK2 R683G，MRD 1.2%,儿童样ALL诱导,LEU-013,0.0734
+LEU-038,leukemia,history,Ph阴性B-ALL,blinatumomab后MRD持续,36,0,CD19阳性，IKZF1缺失，MRD 0.03%,多药化疗；blinatumomab 2个疗程,LEU-011,0.1111
+LEU-039,leukemia,history,复发B-ALL,inotuzumab后缓解、待移植,54,1,CD22阳性，MRD阴性,强化化疗；inotuzumab 2个疗程,LEU-011,0.0542
+LEU-040,leukemia,history,T-ALL,首次骨髓复发,25,1,CD7强阳性，NOTCH1突变,儿童样ALL方案完成维持,LEU-003,0.0914
+LEU-041,leukemia,history,ETP-ALL,异基因移植后复发,30,2,ETP免疫表型，FLT3突变,多药化疗；异基因移植,LEU-030,0.1111
+LEU-042,leukemia,history,BCR::ABL1阳性混合表型急性白血病,老年初诊,69,2,B/髓系MPAL，BCR::ABL1 p210,无,LEU-014,0.1043
+LEU-043,leukemia,history,慢性髓性白血病,无治疗缓解尝试后分子复发,46,0,BCR::ABL1回升至0.18% IS，无耐药突变,dasatinib深度分子缓解5年后停药,LEU-015,0.1193
+LEU-044,leukemia,history,慢性髓性白血病,淋系急变、多TKI耐药,58,2,BCR::ABL1 T315I，CD19阳性,多种TKI；ponatinib,LEU-016,0.2202
+LEU-045,leukemia,history,MDS伴原始细胞增多,高危、移植候选,62,1,U2AF1、RUNX1和ASXL1突变，原始细胞12%,无,LEU-020,0.0802
+LEU-046,leukemia,history,低危MDS伴del(5q),lenalidomide后失应答,73,1,del(5q)，新出现TP53低负荷克隆,lenalidomide 30个月,LEU-020,0.0452
+LEU-047,leukemia,history,慢性髓单核细胞白血病,去甲基化后部分缓解、待移植,59,1,ASXL1、TET2、CBL突变,decitabine 6个疗程,LEU-018,0.0920
+LEU-048,leukemia,history,MDS/MPN伴中性粒细胞增多,进展性、青年,39,1,SETBP1、ETNK1和ASXL1突变，BCR::ABL1阴性,hydroxyurea,LEU-018,0.1033
+LEU-049,leukemia,history,BCR::ABL1阴性骨髓增殖性肿瘤,转化为AML,65,2,JAK2 V617F，TP53和NRAS突变,ruxolitinib治疗骨髓纤维化3年,LEU-017,0.1011
+LEU-050,leukemia,history,母细胞性浆细胞样树突细胞肿瘤,初诊、皮肤与骨髓受累,43,0,CD123强阳性，TCF4阳性,无,LEU-040,0.0405
+LEU-051,leukemia,history,慢性淋巴细胞白血病,BTK和BCL2抑制剂后进展,68,1,del(17p)，TP53突变，BTK C481S,ibrutinib；venetoclax联合抗CD20抗体,LEU-024,0.0721
+LYM-001,lymphoma,query,弥漫性大B细胞淋巴瘤，GCB型,初诊、晚期,58,1,MYC阴性，BCL2蛋白高表达,无,LYM-026,0.0882
+LYM-002,lymphoma,history,弥漫性大B细胞淋巴瘤，ABC型,一线难治,64,1,CD19阳性，MYD88 L265P,R-CHOP 6个疗程,LYM-007,0.1005
+LYM-003,lymphoma,history,高级别B细胞淋巴瘤,初诊、双打击,49,1,MYC和BCL2重排,无,LYM-030,0.0730
+LYM-004,lymphoma,history,弥漫性大B细胞淋巴瘤,CAR-T后复发,61,2,CD19弱阳性，CD20阳性,R-CHOP；挽救化疗；CD19 CAR-T,LYM-031,0.1564
+LYM-005,lymphoma,history,弥漫性大B细胞淋巴瘤,晚期复发、移植适合,52,0,CD20阳性，无MYC重排,R-CHOP后缓解36个月,LYM-032,0.1111
+LYM-006,lymphoma,history,原发中枢神经系淋巴瘤,初诊、老年,73,2,MYD88 L265P，CD20阳性,无,LYM-033,0.1943
+LYM-007,lymphoma,history,原发纵隔大B细胞淋巴瘤,一线难治,35,1,CD30阳性，PD-L1高表达,DA-EPOCH-R 6个疗程；局部放疗,LYM-008,0.1742
+LYM-008,lymphoma,history,原发纵隔大B细胞淋巴瘤,CAR-T后局部复发,42,0,CD19阴性，CD30阳性,DA-EPOCH-R；放疗；CD19 CAR-T,LYM-007,0.1742
+LYM-009,lymphoma,history,滤泡性淋巴瘤1–2级,低肿瘤负荷初诊,60,0,t(14;18)，FLIPI 1,无,LYM-010,0.0786
+LYM-010,lymphoma,history,滤泡性淋巴瘤2级,高肿瘤负荷初诊,67,1,EZH2突变，FLIPI 3,无,LYM-040,0.1319
+LYM-011,lymphoma,history,滤泡性淋巴瘤,POD24、早期复发,56,1,CD20阳性，无转化证据,bendamustine联合抗CD20抗体,LYM-035,0.1082
+LYM-012,lymphoma,history,套细胞淋巴瘤,年轻、初诊,51,0,t(11;14)，TP53野生型，ki-67 35%,无,LYM-020,0.1399
+LYM-013,lymphoma,history,套细胞淋巴瘤,老年初诊,78,2,t(11;14)，ki-67 20%,无,LYM-012,0.0719
+LYM-014,lymphoma,history,套细胞淋巴瘤,BTK抑制剂后进展,65,1,TP53突变，ki-67 70%,免疫化疗；自体移植；BTK抑制剂,LYM-038,0.1098
+LYM-015,lymphoma,history,经典型霍奇金淋巴瘤,早期不良风险,27,0,EBV阴性，纵隔大包块,无,LYM-016,0.1024
+LYM-016,lymphoma,history,经典型霍奇金淋巴瘤,晚期初诊,44,1,CD30阳性，IPS 4,无,LYM-015,0.1024
+LYM-017,lymphoma,history,经典型霍奇金淋巴瘤,自体移植后复发,39,1,CD30阳性，PD-L1高表达,ABVD；挽救化疗；自体移植,LYM-043,0.1576
+LYM-018,lymphoma,history,MALT淋巴瘤,胃局限期、初诊,62,0,API2::MALT1阴性，幽门螺杆菌阳性,无,LYM-024,0.0252
+LYM-019,lymphoma,history,脾边缘区淋巴瘤,症状性、细胞减少,70,1,NOTCH2突变，IGH克隆性,观察3年,LYM-040,0.1224
+LYM-020,lymphoma,history,外周T细胞淋巴瘤，NOS,初诊、高危,55,1,TCR克隆性，CD30阴性,无,LYM-012,0.1399
+LYM-021,lymphoma,history,血管免疫母T细胞淋巴瘤,首次复发,63,2,TET2、DNMT3A和RHOA G17V突变,CHOP样治疗后缓解10个月,LYM-046,0.1290
+LYM-022,lymphoma,history,ALK阳性间变性大细胞淋巴瘤,初诊、晚期,32,0,NPM::ALK阳性，CD30强阳性,无,LYM-047,0.1579
+LYM-023,lymphoma,history,伯基特淋巴瘤,初诊、高肿瘤负荷,26,1,MYC重排，EBV阴性,无,LYM-003,0.0556
+LYM-024,lymphoma,history,鼻型结外NK/T细胞淋巴瘤,局限期初诊,48,1,EBER阳性，血浆EBV-DNA升高,无,LYM-029,0.0457
+LYM-025,lymphoma,history,移植后淋巴增殖性疾病,肾移植后、EBV阳性,50,2,EBER阳性，CD20阳性,肾移植后免疫抑制6年,LYM-029,0.0820
+LYM-026,lymphoma,history,原发睪丸弥漫性大B细胞淋巴瘤,初诊、局限期,66,1,MYD88 L265P，CD20阳性,无,LYM-027,0.1509
+LYM-027,lymphoma,history,血管内大B细胞淋巴瘤,初诊、多器官受累,72,3,CD20阳性，MYD88 L265P,无,LYM-026,0.1509
+LYM-028,lymphoma,history,原发皮肤弥漫性大B细胞淋巴瘤，腿型,局部复发,79,1,BCL2和MUM1阳性，MYD88突变,局部放疗后缓解18个月,LYM-026,0.0920
+LYM-029,lymphoma,history,EBV阳性弥漫性大B细胞淋巴瘤,老年初诊,81,2,EBER弥漫阳性，CD20阳性，PD-L1高表达,无,LYM-025,0.0820
+LYM-030,lymphoma,history,滤泡性淋巴瘤转化为DLBCL,首次组织学转化,61,1,MYC野生型，BCL2重排，CD20阳性,观察等待4年；局部放疗,LYM-045,0.1611
+LYM-031,lymphoma,history,弥漫性大B细胞淋巴瘤,双特异性抗体后进展,57,2,CD19阴性，CD20弱阳性，CD22阳性,R-CHOP；自体移植；CAR-T；CD20×CD3双抗,LYM-004,0.1564
+LYM-032,lymphoma,history,弥漫性大B细胞淋巴瘤,自体移植后晚期孤立骨复发,48,0,CD20阳性，GCB型,R-CHOP；挽救化疗；自体移植,LYM-004,0.1228
+LYM-033,lymphoma,history,原发中枢神经系统淋巴瘤,自体移植后复发,59,1,MYD88 L265P，CD20阳性,高剂量甲氨蝶呤为基础的联合方案；塞替派自体移植,LYM-006,0.1943
+LYM-034,lymphoma,history,原发玻璃体视网膜淋巴瘤,双眼受累、无脑实质病灶,63,0,玻璃体IL-10升高，MYD88 L265P,无,LYM-006,0.0649
+LYM-035,lymphoma,history,滤泡性淋巴瘤,多线复发、EZH2突变,65,1,EZH2 Y646N，CD20阳性,免疫化疗；lenalidomide联合抗CD20抗体,LYM-011,0.1082
+LYM-036,lymphoma,history,滤泡性淋巴瘤,怀疑转化、待再活检,54,1,t(14;18)，新出现LDH升高,抗CD20单药后缓解3年,LYM-042,0.0980
+LYM-037,lymphoma,history,白血病样非淋巴结性套细胞淋巴瘤,无症状、低增殖,62,0,SOX11阴性，t(11;14)，ki-67 5%,无,LYM-013,0.0719
+LYM-038,lymphoma,history,套细胞淋巴瘤,CAR-T后CD19阴性复发,60,2,CD19阴性，CD20阳性，TP53突变,免疫化疗；BTK抑制剂；CD19 CAR-T,LYM-004,0.1379
+LYM-039,lymphoma,history,华氏巨球蛋白血症/淋巴浆细胞淋巴瘤,BTK抑制剂不耐受,71,1,MYD88 L265P，CXCR4野生型,zanubrutinib后反复房颤,LYM-026,0.0622
+LYM-040,lymphoma,history,结内边缘区淋巴瘤,初诊、高肿瘤负荷,64,1,KLF2突变，CD20阳性,无,LYM-010,0.1319
+LYM-041,lymphoma,history,边缘区淋巴瘤转化为DLBCL,首次转化,69,2,TP53突变，MYC蛋白高表达,抗CD20单药；bendamustine联合抗CD20抗体,LYM-030,0.1089
+LYM-042,lymphoma,history,小淋巴细胞淋巴瘤,怀疑Richter转化,67,2,TP53突变，某淋巴结SUVmax 19,acalabrutinib治疗2年,LYM-036,0.0980
+LYM-043,lymphoma,history,经典型霍奇金淋巴瘤,PD-1抑制后缓解、待异基因移植,33,0,PD-L1高表达，CD30阳性,ABVD；挽救化疗；自体移植；nivolumab,LYM-017,0.1576
+LYM-044,lymphoma,history,经典型霍奇金淋巴瘤,妊娠早期初诊,29,0,CD30阳性，EBER阴性,无,LYM-016,0.0938
+LYM-045,lymphoma,history,结节性淋巴细胞为主型B细胞淋巴瘤,转化为大B细胞淋巴瘤,45,0,LP细胞CD20阳性，CD30阴性,局部放疗后缓解6年,LYM-030,0.1611
+LYM-046,lymphoma,history,滤泡辅助T细胞表型的结内外周T细胞淋巴瘤,初诊、高危,58,1,RHOA G17V，TET2和IDH2 R172突变,无,LYM-021,0.1290
+LYM-047,lymphoma,history,ALK阴性间变性大细胞淋巴瘤,初诊、DUSP22重排,52,1,CD30强阳性，DUSP22重排，TP63阴性,无,LYM-022,0.1579
+LYM-048,lymphoma,history,肝脾T细胞淋巴瘤,初诊、年轻高危,28,2,TCRγδ克隆，i(7q)，STAT5B突变,无,LYM-051,0.0838
+LYM-049,lymphoma,history,成人T细胞白血病/淋巴瘤,急性型、高钙血症,55,2,HTLV-1阳性，CCR4高表达,无,LYM-046,0.0489
+LYM-050,lymphoma,history,蕲样肉芽肿/Sézary综合征,皮肤红皮病期、多线治疗,70,1,CCR4阳性，外周血Sézary细胞克隆,光疗；bexarotene；体外光化学疗法,LYM-028,0.0383
+LYM-051,lymphoma,history,原发皮肤γδT细胞淋巴瘤,初诊、皮下与骨髓受累,41,1,TCRγδ克隆，CD56阳性，EBER阴性,无,LYM-048,0.0838
