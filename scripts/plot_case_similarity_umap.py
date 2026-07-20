@@ -314,6 +314,12 @@ def main() -> None:
         for rank, (case_id, _score) in enumerate(query_rankings[query["case_id"]], start=1):
             index = next(i for i, row in enumerate(history_rows) if row["case_id"] == case_id)
             point = history_coords[index]
+            # Connect each query case to its original-embedding Top-k matches.
+            # The ranking is computed above from cosine similarity; the line is
+            # only a visual guide in the 2-D projection.
+            ax.plot([coordinate[0], point[0]], [coordinate[1], point[1]],
+                    color="#25364D", linewidth=1.25, alpha=0.72,
+                    linestyle="-", zorder=4)
             ax.annotate(str(rank), xy=point, xytext=(5, 5), textcoords="offset points",
                         fontsize=9, color="#25364D", fontweight="bold", zorder=7,
                         bbox={"boxstyle": "circle,pad=0.18", "fc": "#D9E7F3",
