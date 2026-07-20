@@ -289,54 +289,57 @@ def main() -> None:
         writer.writeheader()
         writer.writerows(coordinate_rows)
 
-    # Produce one figure per disease group so their distributions are not visually
-    # compressed or mistaken for overlapping clusters. Coordinates and rankings
-    # remain shared and are still computed from the original embedding space.
-    for plot_group in ("leukemia", "lymphoma"):
-        indices = [i for i, row in enumerate(history_rows) if row["group"] == plot_group]
-        group_queries = [(query, coordinate) for query, coordinate in zip(queries, query_coords)
-                         if query["group"] == plot_group]
-        if not indices and not group_queries:
+    # One shared coordinate system makes leukemia and lymphoma directly comparable.
+    fig, ax = plt.subplots(figsize=(12, 8), dpi=args.dpi)
+    for group, color in (("leukemia", COLORS["leukemia"]), ("lymphoma", COLORS["lymphoma"])):
+        indices = [i for i, row in enumerate(history_rows) if row["group"] == group]
+        if not indices:
             continue
-        fig, ax = plt.subplots(figsize=(10, 8), dpi=args.dpi)
         points = history_coords[indices]
-        color = COLORS[plot_group]
-        if len(points):
-            label = "Leukemia" if plot_group == "leukemia" else "Lymphoma"
-            ax.scatter(points[:, 0], points[:, 1], s=38, c=color, alpha=0.8, linewidths=0.35,
-                       edgecolors="white", label=f"{label} history (n={len(points)})")
-            hull = convex_hull(points)
-            if len(hull) >= 3:
-                closed = np.vstack([hull, hull[0]])
-                ax.plot(closed[:, 0], closed[:, 1], color=color, linewidth=1.1,
-                        linestyle=(0, (5, 4)), alpha=0.6)
-        for query, coordinate in group_queries:
-            ax.scatter([coordinate[0]], [coordinate[1]], s=190, marker="s", c=[color],
-                       edgecolors="#1D2939", linewidths=1.8, zorder=6)
-            ax.text(coordinate[0], coordinate[1], "C", color="white", ha="center", va="center",
-                    fontsize=9, fontweight="bold", zorder=7)
-            for rank, (case_id, _score) in enumerate(query_rankings[query["case_id"]], start=1):
-                index = next(i for i, row in enumerate(history_rows) if row["case_id"] == case_id)
-                point = history_coords[index]
-                ax.annotate(str(rank), xy=point, xytext=(5, 5), textcoords="offset points",
-                            fontsize=9, color="#25364D", fontweight="bold", zorder=7,
-                            bbox={"boxstyle": "circle,pad=0.18", "fc": "#D9E7F3",
-                                  "ec": "#25364D", "lw": 0.8})
-        label = "Leukemia" if plot_group == "leukemia" else "Lymphoma"
-        ax.set_title(f"Clinical case similarity search — {label}", fontsize=17, pad=16, color="#25364D")
-        ax.text(0.5, 1.01, f"{method_name} projection; Top-{args.top_k} ranked in original embedding space",
-                transform=ax.transAxes, ha="center", va="bottom", fontsize=9.5, color="#5B677A")
-        ax.set_xlabel(f"{method_name}-1")
-        ax.set_ylabel(f"{method_name}-2")
-        ax.grid(True, color="#D9E0E8", linewidth=0.6, alpha=0.7)
-        ax.set_facecolor("#FCFDFE")
-        ax.legend(frameon=False, loc="best")
-        fig.tight_layout()
-        stem = f"case_similarity_{plot_group}"
-        fig.savefig(args.output_dir / f"{stem}.png", dpi=args.dpi, bbox_inches="tight")
-        fig.savefig(args.output_dir / f"{stem}.svg", bbox_inches="tight")
-        plt.close(fig)
-        LOGGER.info("Wrote %s", args.output_dir / f"{stem}.png")
+        label = "Leukemia" if group == "leukemia" else "Lymphoma"
+        ax.scatter(points[:, 0], points[:, 1], s=38, c=color, alpha=0.8, linewidths=0.35,
+                   edgecolors="white", label=f"{label} history (n={len(points)})")
+        hull = convex_hull(points)
+        if len(hull) >= 3:
+            closed = np.vstack([hull, hull[0]])
+            ax.plot(closed[:, 0], closed[:, 1], color=color, linewidth=1.1,
+                    linestyle=(0, (5, 4)), alpha=0.6)
+
+    for query, coordinate in zip(queries, query_coords):
+        color = COLORS.get(query["group"], COLORS["unknown"])
+        ax.scatter([coordinate[0]], [coordinate[1]], s=190, marker="s", c=[color],
+                   edgecolors="#1D2939", linewidths=1.8, zorder=6)
+        ax.text(coordinate[0], coordinate[1], "C", color="white", ha="center", va="center",
+                fontsize=9, fontweight="bold", zorder=7)
+        for rank, (case_id, _score) in enumerate(query_rankings[query["case_id"]], start=1):
+            index = next(i for i, row in enumerate(history_rows) if row["case_id"] == case_id)
+            point = history_coords[index]
+            ax.annotate(str(rank), xy=point, xytext=(5, 5), textcoords="offset points",
+                        fontsize=9, color="#25364D", fontweight="bold", zorder=7,
+                        bbox={"boxstyle": "circle,pad=0.18", "fc": "#D9E7F3",
+                              "ec": "#25364D", "lw": 0.8})
+
+    # Explicit shared limits prevent one group from being visually rescaled.
+    all_points = np.vstack([history_coords, query_coords])
+    x_min, x_max = all_points[:, 0].min(), all_points[:, 0].max()
+    y_min, y_max = all_points[:, 1].min(), all_points[:, 1].max()
+    x_pad = max((x_max - x_min) * 0.08, 1e-6)
+    y_pad = max((y_max - y_min) * 0.08, 1e-6)
+    ax.set_xlim(x_min - x_pad, x_max + x_pad)
+    ax.set_ylim(y_min - y_pad, y_max + y_pad)
+    ax.set_title("Clinical case similarity search", fontsize=17, pad=16, color="#25364D")
+    ax.text(0.5, 1.01, f"{method_name} projection of all cases; Top-{args.top_k} ranked in original embedding space",
+            transform=ax.transAxes, ha="center", va="bottom", fontsize=9.5, color="#5B677A")
+    ax.set_xlabel(f"{method_name}-1")
+    ax.set_ylabel(f"{method_name}-2")
+    ax.grid(True, color="#D9E0E8", linewidth=0.6, alpha=0.7)
+    ax.set_facecolor("#FCFDFE")
+    ax.legend(frameon=False, loc="best")
+    fig.tight_layout()
+    fig.savefig(args.output_dir / "case_similarity_umap.png", dpi=args.dpi, bbox_inches="tight")
+    fig.savefig(args.output_dir / "case_similarity_umap.svg", bbox_inches="tight")
+    plt.close(fig)
+    LOGGER.info("Wrote %s", args.output_dir / "case_similarity_umap.png")
     LOGGER.info("Wrote %s", coordinate_path)
     for query_id, ranking in query_rankings.items():
         LOGGER.info("%s Top-%d: %s", query_id, args.top_k,
