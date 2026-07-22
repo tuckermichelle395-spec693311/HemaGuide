@@ -495,12 +495,26 @@ Examples:
         supplemental_reason = decision.get('supplemental_reason')
         if not supplemental_reason:
             supplemental_reason = "未记录到补充命中依据。"
+        evidence_excerpts = []
+        for source_type, label in (
+            ('guidelines', '流程图/指南'),
+            ('similar_cases', '历史病例'),
+            ('pubmed', 'PubMed'),
+            ('conferences', '会议记录'),
+        ):
+            for hit in (decision.get('evidence_hits') or {}).get(source_type, []):
+                quote = (hit.get('quote') or '').strip()
+                if quote:
+                    source = hit.get('source_file') or hit.get('pmid') or hit.get('doi') or '未注明来源'
+                    evidence_excerpts.append(f"【{label}｜{source}】\n原文：{quote}")
+        evidence_text = '\n\n'.join(evidence_excerpts) or '未提取到可直接引用的原文。'
         out_txt.write_text(
             f"MODE: {_evidence_label}\n"
             f"{'─' * 60}\n\n"
             f"DECISION:\n{decision.get('konferenzbeschluss', 'N/A')}\n\n"
             f"ORIGINAL REASON:\n{decision.get('begründung', 'N/A')}\n\n"
-            f"SUPPLEMENTAL REASON:\n{supplemental_reason}\n",
+            f"SUPPLEMENTAL REASON:\n{supplemental_reason}\n"
+            f"\nEVIDENCE EXCERPTS:\n{evidence_text}\n",
             encoding='utf-8'
         )
 

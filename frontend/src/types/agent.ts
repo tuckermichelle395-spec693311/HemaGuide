@@ -32,6 +32,7 @@ export interface EvidenceHit {
   relevance?: string;
   similarity_score?: number | null;
   key_finding_zh?: string;
+  quote?: string;
 }
 
 export interface EvidenceHits {

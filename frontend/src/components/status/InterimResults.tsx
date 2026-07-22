@@ -47,6 +47,29 @@ function EvidenceSources({ result }: { result: CaseResult }) {
   );
 }
 
+function EvidenceExcerpts({ result }: { result: CaseResult }) {
+  const evidence = result.evidence_hits;
+  if (!evidence) return null;
+  const sources = [
+    ...(evidence.guidelines || []).map(item => ({ ...item, label: '流程图/指南' })),
+    ...(evidence.similar_cases || []).map(item => ({ ...item, label: '历史病例' })),
+    ...(evidence.pubmed || []).map(item => ({ ...item, label: 'PubMed' })),
+    ...(evidence.conferences || []).map(item => ({ ...item, label: item.conference || '会议记录' })),
+  ].filter(item => item.quote);
+  if (sources.length === 0) return null;
+  return (
+    <div className="mt-4 pt-3 border-t border-slate-200 space-y-2">
+      <h6 className="text-xs font-medium text-slate-600">引用原文</h6>
+      {sources.map((source, index) => (
+        <div key={`excerpt-${source.source_file || source.pmid || index}`} className="rounded-lg bg-slate-50 p-3">
+          <div className="text-xs text-slate-500">{source.label}{source.pmid ? ` · PMID: ${source.pmid}` : ''}</div>
+          <p className="mt-1 text-xs leading-relaxed text-slate-700">“{source.quote}”</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const MODE_CONFIG = {
   GUIDELINE: {
     label: 'GUIDELINE',
@@ -187,6 +210,7 @@ export function InterimResults({ caseResults, isProcessing }: InterimResultsProp
                         {caseResult.supplemental_reason}
                       </p>
                       <EvidenceSources result={caseResult} />
+                      <EvidenceExcerpts result={caseResult} />
                     </div>
                   </details>
                 )}

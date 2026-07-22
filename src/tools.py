@@ -990,6 +990,14 @@ def _source_by_index(items: List[Dict], tailored_item: Dict) -> Dict | None:
     return items[idx] if 0 <= idx < len(items) else None
 
 
+def _evidence_excerpt(value: Any, limit: int = 360) -> str:
+    """Return a short, source-preserving excerpt for auditable output."""
+    text = re.sub(r'\s+', ' ', str(value or '')).strip()
+    if len(text) <= limit:
+        return text
+    return text[:limit].rstrip() + '…'
+
+
 def _build_evidence_hits(
     similar_cases: List[Dict] = None,
     pubmed_articles: List[Dict] = None,
@@ -1010,6 +1018,7 @@ def _build_evidence_hits(
             'similarity_score': source.get('similarity_score'),
             'relevance': selected.get('relevance', ''),
             'key_finding_zh': selected.get('key_insight', ''),
+            'quote': _evidence_excerpt(source.get('content') or source.get('history') or source.get('text')),
         })
 
     seen_pmids = set()
@@ -1033,6 +1042,7 @@ def _build_evidence_hits(
             'year': str(source.get('year', '')),
             'relevance': selected.get('relevance', ''),
             'key_finding_zh': selected.get('key_finding') or selected.get('therapeutic_implication', ''),
+            'quote': _evidence_excerpt(source.get('abstract')),
         })
 
     seen_dois = set()
@@ -1054,6 +1064,7 @@ def _build_evidence_hits(
             'year': str(source.get('year', '')),
             'relevance': selected.get('relevance', ''),
             'key_finding_zh': selected.get('key_finding') or selected.get('therapeutic_implication', ''),
+            'quote': _evidence_excerpt(source.get('abstract')),
         })
 
     return hits
@@ -1183,6 +1194,7 @@ def _decide_with_guideline(case: Dict, config: Dict, args: Dict) -> Dict:
             'source_file': f'data/flowchart/{entity_slug}.txt',
             'path': args.get('flowchart_path', ''),
             'key_finding_zh': args.get('reasoning', ''),
+            'quote': _evidence_excerpt(flowchart_text),
         }],
         'similar_cases': [],
         'pubmed': [],
