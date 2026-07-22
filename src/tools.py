@@ -1043,7 +1043,7 @@ def _relevant_evidence_excerpt(value: Any, anchors: Any = '', limit: int = 2000)
     # require whitespace after .!? so decimals such as ``P=0.05`` and
     # abbreviations are not split into a false sentence ending.
     sentences = [part.strip() for part in re.split(
-        r'(?<=[。！？])\s*|(?<=[.!?])\s+(?=[A-Z0-9])', text
+        r'(?<=[。！？])\s*|(?<=[.!?])\s+(?=[A-Z])', text
     ) if part.strip()]
     if len(sentences) <= 1:
         return _evidence_excerpt(text, limit)
