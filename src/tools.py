@@ -244,6 +244,20 @@ def _select_flowchart_branches(flowchart_text: str, branch_path: str) -> str:
     return "\n\n".join([preamble, *selected]).strip()
 
 
+def _flowchart_quote(flowchart_text: str, branch_path: str) -> str:
+    """Return routed branch text without the file-level preamble."""
+    branch_matches = list(re.finditer(r"(?m)^分支\s+(AML-\d+[A-Z]?)[:：]", flowchart_text))
+    requested = list(dict.fromkeys(re.findall(r"\bAML-\d+[A-Z]?\b", branch_path or "")))
+    if not branch_matches or not requested:
+        return flowchart_text
+    branches = {}
+    for index, match in enumerate(branch_matches):
+        end = branch_matches[index + 1].start() if index + 1 < len(branch_matches) else len(flowchart_text)
+        branches[match.group(1)] = flowchart_text[match.start():end].strip()
+    selected = [branches[branch_id] for branch_id in requested if branch_id in branches]
+    return "\n\n".join(selected) if selected else flowchart_text
+
+
 def load_flowchart(entity_slug: str = None, branch_path: str = None) -> str:
     """
     Load flowchart from data/flowchart/{entity_slug}.txt.
@@ -998,6 +1012,27 @@ def _evidence_excerpt(value: Any, limit: int = 360) -> str:
     return text[:limit].rstrip() + '…'
 
 
+def _relevant_evidence_excerpt(value: Any, anchors: Any = '', limit: int = 360) -> str:
+    """Select the most anchor-relevant sentence(s), not always the text prefix."""
+    text = re.sub(r'\s+', ' ', str(value or '')).strip()
+    if not text:
+        return ''
+    sentences = [part.strip() for part in re.split(r'(?<=[.!?。！？])\s*', text) if part.strip()]
+    if len(sentences) <= 1:
+        return _evidence_excerpt(text, limit)
+    anchor_tokens = set(re.findall(r'[A-Za-z0-9][A-Za-z0-9+_.-]{2,}|[\u4e00-\u9fff]{2,}', str(anchors or '').lower()))
+    if not anchor_tokens:
+        return _evidence_excerpt(text, limit)
+    ranked = sorted(enumerate(sentences), key=lambda item: sum(token in item[1].lower() for token in anchor_tokens), reverse=True)
+    best_index, best_sentence = ranked[0]
+    if sum(token in best_sentence.lower() for token in anchor_tokens) == 0:
+        return _evidence_excerpt(text, limit)
+    selected = [best_sentence]
+    if best_index + 1 < len(sentences) and len(' '.join(selected)) < limit * 0.65:
+        selected.append(sentences[best_index + 1])
+    return _evidence_excerpt(' '.join(selected), limit)
+
+
 def _build_evidence_hits(
     similar_cases: List[Dict] = None,
     pubmed_articles: List[Dict] = None,
@@ -1018,7 +1053,7 @@ def _build_evidence_hits(
             'similarity_score': source.get('similarity_score'),
             'relevance': selected.get('relevance', ''),
             'key_finding_zh': selected.get('key_insight', ''),
-            'quote': _evidence_excerpt(source.get('content') or source.get('history') or source.get('text')),
+            'quote': _relevant_evidence_excerpt(source.get('content') or source.get('history') or source.get('text'), selected.get('key_insight')),
         })
 
     seen_pmids = set()
@@ -1042,7 +1077,7 @@ def _build_evidence_hits(
             'year': str(source.get('year', '')),
             'relevance': selected.get('relevance', ''),
             'key_finding_zh': selected.get('key_finding') or selected.get('therapeutic_implication', ''),
-            'quote': _evidence_excerpt(source.get('abstract')),
+            'quote': _relevant_evidence_excerpt(source.get('abstract'), selected.get('key_finding') or selected.get('therapeutic_implication')),
         })
 
     seen_dois = set()
@@ -1064,7 +1099,7 @@ def _build_evidence_hits(
             'year': str(source.get('year', '')),
             'relevance': selected.get('relevance', ''),
             'key_finding_zh': selected.get('key_finding') or selected.get('therapeutic_implication', ''),
-            'quote': _evidence_excerpt(source.get('abstract')),
+            'quote': _relevant_evidence_excerpt(source.get('abstract'), selected.get('key_finding') or selected.get('therapeutic_implication')),
         })
 
     return hits
@@ -1194,7 +1229,7 @@ def _decide_with_guideline(case: Dict, config: Dict, args: Dict) -> Dict:
             'source_file': f'data/flowchart/{entity_slug}.txt',
             'path': args.get('flowchart_path', ''),
             'key_finding_zh': args.get('reasoning', ''),
-            'quote': _evidence_excerpt(flowchart_text),
+            'quote': _evidence_excerpt(_flowchart_quote(flowchart_text, path)),
         }],
         'similar_cases': [],
         'pubmed': [],
