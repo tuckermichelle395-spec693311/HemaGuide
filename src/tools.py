@@ -1260,11 +1260,12 @@ def _decide_with_guideline(case: Dict, config: Dict, args: Dict) -> Dict:
             'quote': re.sub(r'\s+', ' ', quote).strip(),
         })
     if not guideline_hits:
+        fallback_nodes = _flowchart_node_quotes(full_flowchart_text, node_ids)
         guideline_hits.append({
             'source_file': f'data/flowchart/{entity_slug}.txt',
             'path': path,
             'key_finding_zh': args.get('reasoning', ''),
-            'quote': re.sub(r'\s+', ' ', _flowchart_quote(flowchart_text, path)).strip(),
+            'quote': re.sub(r'\s+', ' ', '\n\n'.join(quote for _, quote in fallback_nodes)).strip(),
         })
     decision['evidence_hits'] = {
         'guidelines': guideline_hits,
