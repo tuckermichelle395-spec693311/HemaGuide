@@ -1009,7 +1009,19 @@ def _evidence_excerpt(value: Any, limit: int = 360) -> str:
     text = re.sub(r'\s+', ' ', str(value or '')).strip()
     if len(text) <= limit:
         return text
-    return text[:limit].rstrip() + '…'
+    candidate = text[:limit]
+    # Never cut through a sentence or a flowchart item. Prefer the last
+    # natural boundary before the limit; fall back to a larger boundary only
+    # when the first sentence/item itself is longer than the target length.
+    boundaries = [candidate.rfind(mark) for mark in ('。', '！', '？', '.', '!', '?', ';', '；')]
+    boundary = max(boundaries)
+    if boundary >= max(80, int(limit * 0.45)):
+        return text[:boundary + 1].rstrip()
+    next_boundary = min((text.find(mark, limit) for mark in ('。', '！', '？', '.', '!', '?', ';', '；')
+                         if text.find(mark, limit) != -1), default=-1)
+    if next_boundary != -1 and next_boundary <= limit + 180:
+        return text[:next_boundary + 1].rstrip()
+    return candidate.rstrip() + '…'
 
 
 def _relevant_evidence_excerpt(value: Any, anchors: Any = '', limit: int = 360) -> str:
@@ -1229,7 +1241,9 @@ def _decide_with_guideline(case: Dict, config: Dict, args: Dict) -> Dict:
             'source_file': f'data/flowchart/{entity_slug}.txt',
             'path': args.get('flowchart_path', ''),
             'key_finding_zh': args.get('reasoning', ''),
-            'quote': _evidence_excerpt(_flowchart_quote(flowchart_text, path)),
+            # Keep the routed branch intact; it is already a bounded source
+            # segment and should not be cut at an arbitrary character count.
+            'quote': re.sub(r'\s+', ' ', _flowchart_quote(flowchart_text, path)).strip(),
         }],
         'similar_cases': [],
         'pubmed': [],
