@@ -505,7 +505,7 @@ Examples:
             for hit in (decision.get('evidence_hits') or {}).get(source_type, []):
                 quote = (hit.get('quote') or '').strip()
                 if quote:
-                    source = hit.get('source_file') or hit.get('pmid') or hit.get('doi') or '未注明来源'
+                    source = hit.get('node_id') or hit.get('source_file') or hit.get('pmid') or hit.get('doi') or '未注明来源'
                     evidence_excerpts.append(f"【{label}｜{source}】\n原文：{quote}")
         evidence_text = '\n\n'.join(evidence_excerpts) or '未提取到可直接引用的原文。'
         out_txt.write_text(

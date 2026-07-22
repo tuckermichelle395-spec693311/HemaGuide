@@ -258,6 +258,16 @@ def _flowchart_quote(flowchart_text: str, branch_path: str) -> str:
     return "\n\n".join(selected) if selected else flowchart_text
 
 
+def _flowchart_node_quotes(flowchart_text: str, node_ids: List[str]) -> List[Tuple[str, str]]:
+    """Return each referenced flowchart node as a separate source excerpt."""
+    matches = list(re.finditer(r"(?m)^分支\s+(AML-\d+[A-Z]?)[:：]", flowchart_text))
+    nodes = {}
+    for index, match in enumerate(matches):
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(flowchart_text)
+        nodes[match.group(1)] = flowchart_text[match.start():end].strip()
+    return [(node_id, nodes[node_id]) for node_id in dict.fromkeys(node_ids) if node_id in nodes]
+
+
 def load_flowchart(entity_slug: str = None, branch_path: str = None) -> str:
     """
     Load flowchart from data/flowchart/{entity_slug}.txt.
@@ -1210,6 +1220,7 @@ def _decide_with_guideline(case: Dict, config: Dict, args: Dict) -> Dict:
 
     # Truncate flowchart_path for display (max 60 chars)
     path = args.get('flowchart_path', '')
+    full_flowchart_text = load_flowchart(entity_slug)
     flowchart_text = load_flowchart(entity_slug, branch_path=path)
     path_short = (path[:60] + "...") if len(path) > 60 else path
     path_info = f" → {path_short}" if path_short else ""
@@ -1236,15 +1247,27 @@ def _decide_with_guideline(case: Dict, config: Dict, args: Dict) -> Dict:
     decision['mode'] = 'GUIDELINE'
     decision['routing_reasoning'] = args.get('reasoning', '')
     decision['flowchart_path'] = args.get('flowchart_path', '')
-    decision['evidence_hits'] = {
-        'guidelines': [{
+    node_ids = re.findall(r"\bAML-\d+[A-Z]?\b", " ".join([
+        path, args.get('reasoning', ''), decision.get('konferenzbeschluss', ''), decision.get('begründung', '')
+    ]))
+    guideline_hits = []
+    for node_id, quote in _flowchart_node_quotes(full_flowchart_text, node_ids):
+        guideline_hits.append({
             'source_file': f'data/flowchart/{entity_slug}.txt',
-            'path': args.get('flowchart_path', ''),
+            'path': path,
+            'node_id': node_id,
             'key_finding_zh': args.get('reasoning', ''),
-            # Keep the routed branch intact; it is already a bounded source
-            # segment and should not be cut at an arbitrary character count.
+            'quote': re.sub(r'\s+', ' ', quote).strip(),
+        })
+    if not guideline_hits:
+        guideline_hits.append({
+            'source_file': f'data/flowchart/{entity_slug}.txt',
+            'path': path,
+            'key_finding_zh': args.get('reasoning', ''),
             'quote': re.sub(r'\s+', ' ', _flowchart_quote(flowchart_text, path)).strip(),
-        }],
+        })
+    decision['evidence_hits'] = {
+        'guidelines': guideline_hits,
         'similar_cases': [],
         'pubmed': [],
         'conferences': [],
