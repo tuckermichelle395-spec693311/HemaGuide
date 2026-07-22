@@ -1004,7 +1004,7 @@ def _source_by_index(items: List[Dict], tailored_item: Dict) -> Dict | None:
     return items[idx] if 0 <= idx < len(items) else None
 
 
-def _evidence_excerpt(value: Any, limit: int = 1000) -> str:
+def _evidence_excerpt(value: Any, limit: int = 2000) -> str:
     """Return a short, source-preserving excerpt for auditable output."""
     text = re.sub(r'\s+', ' ', str(value or '')).strip()
     if len(text) <= limit:
