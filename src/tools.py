@@ -1275,6 +1275,24 @@ def _decide_with_guideline(case: Dict, config: Dict, args: Dict) -> Dict:
     }
     decision['supplemental_reason'] = _build_supplemental_reason(decision)
 
+    # The routing explanation may mention upstream nodes (for example AML-5)
+    # even when the tool path ends at AML-6. Re-read those explicit references
+    # and add their source excerpts so the evidence section mirrors the full
+    # clinical path described to the user.
+    expanded_node_ids = list(dict.fromkeys(node_ids + re.findall(
+        r"\bAML-\d+[A-Z]?\b", decision.get('supplemental_reason', '')
+    )))
+    expanded_quotes = _flowchart_node_quotes(full_flowchart_text, expanded_node_ids)
+    if expanded_quotes:
+        decision['evidence_hits']['guidelines'] = [{
+            'source_file': f'data/flowchart/{entity_slug}.txt',
+            'path': path,
+            'node_id': node_id,
+            'key_finding_zh': args.get('reasoning', ''),
+            'quote': re.sub(r'\s+', ' ', quote).strip(),
+        } for node_id, quote in expanded_quotes]
+        decision['supplemental_reason'] = _build_supplemental_reason(decision)
+
     # Layer 4: Mark if this was a fallback decision
     if args.get('fallback'):
         decision['fallback_mode'] = True
