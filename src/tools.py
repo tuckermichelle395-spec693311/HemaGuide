@@ -1039,7 +1039,12 @@ def _relevant_evidence_excerpt(value: Any, anchors: Any = '', limit: int = 360) 
     text = re.sub(r'\s+', ' ', str(value or '')).strip()
     if not text:
         return ''
-    sentences = [part.strip() for part in re.split(r'(?<=[.!?。！？])\s*', text) if part.strip()]
+    # Chinese punctuation is an unambiguous boundary. For English text,
+    # require whitespace after .!? so decimals such as ``P=0.05`` and
+    # abbreviations are not split into a false sentence ending.
+    sentences = [part.strip() for part in re.split(
+        r'(?<=[。！？])\s*|(?<=[.!?])\s+(?=[A-Z0-9])', text
+    ) if part.strip()]
     if len(sentences) <= 1:
         return _evidence_excerpt(text, limit)
     anchor_tokens = set(re.findall(r'[A-Za-z0-9][A-Za-z0-9+_.-]{2,}|[\u4e00-\u9fff]{2,}', str(anchors or '').lower()))
