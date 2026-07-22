@@ -1034,7 +1034,7 @@ def _evidence_excerpt(value: Any, limit: int = 2000) -> str:
     return candidate.rstrip() + '…'
 
 
-def _relevant_evidence_excerpt(value: Any, anchors: Any = '', limit: int = 360) -> str:
+def _relevant_evidence_excerpt(value: Any, anchors: Any = '', limit: int = 2000) -> str:
     """Select the most anchor-relevant sentence(s), not always the text prefix."""
     text = re.sub(r'\s+', ' ', str(value or '')).strip()
     if not text:
